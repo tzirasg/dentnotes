@@ -74,7 +74,10 @@ h1{font-size:34px;line-height:1.1;margin:4px 0 0;font-weight:800;letter-spacing:
 .stat.grad{background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(255,61,132,.28)}
 .stat-n{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .stat-l{font-size:12px;font-weight:600;opacity:.75;margin-top:2px}
-.list-meta{font-size:13px;color:var(--muted);font-weight:600;margin:16px 4px 8px}
+.list-meta{font-size:13px;color:var(--muted);font-weight:600;margin:16px 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sort-link{display:inline-flex;align-items:center;gap:4px;color:var(--pink);font-weight:700;padding:4px 0 4px 8px}
+.letter{font-size:15px;font-weight:800;color:var(--pink);margin:14px 6px 6px;letter-spacing:.02em}
+.set-check{color:var(--pink);width:22px;display:grid;place-items:center;flex-shrink:0}
 
 /* Patient card */
 .pcard{display:flex;width:100%;gap:12px;align-items:center;padding:13px 14px;background:var(--card);border-radius:18px;
@@ -345,7 +348,7 @@ h1{font-size:34px;line-height:1.1;margin:4px 0 0;font-weight:800;letter-spacing:
 
 <script>
 'use strict';
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 /* ================= Βοηθητικά ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -383,7 +386,7 @@ const initials = name => {
   if (!parts.length) return '?';
   const first = Array.from(parts[0])[0] || '';
   const last = parts.length > 1 ? (Array.from(parts[parts.length - 1])[0] || '') : '';
-  return (first + last).toUpperCase();
+  return (first + last).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
 };
 const fmtSize = b => b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 const store = {
@@ -411,6 +414,8 @@ const P = {
   trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
   share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
   close: '<path d="M18 6 6 18M6 6l12 12"/>',
+  sort: '<path d="M3 6h13M3 12h9M3 18h5M17 10v10M14 17l3 3 3-3"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
   alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
   download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
   upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
@@ -715,14 +720,54 @@ function patientListHTML() {
   const raw = state.search.trim();
   const q = norm(raw);
   const qDigits = raw.replace(/\D/g, '');
-  let list = state.patients.slice().sort((a, b) => a.name.localeCompare(b.name, 'el', { sensitivity: 'base' }));
+  const info = visitInfoMap();
+  const mode = getSortMode();
+  let list = sortPatients(state.patients, mode, info);
   if (q) {
     list = list.filter(p => norm([p.name, p.phone, p.facultyNo, p.ambulatoryNo, p.origin].join(' ')).includes(q)
       || (qDigits.length >= 3 && String(p.phone || '').replace(/\D/g, '').includes(qDigits)));
   }
   if (!list.length) return `<div class="empty small">Δεν βρέθηκε ασθενής για «${esc(raw)}»</div>`;
-  const info = visitInfoMap();
-  return `<div class="list-meta">${q ? `${list.length} αποτελέσματα` : 'Όλοι οι ασθενείς'}</div>` + list.map(p => patientCard(p, info.get(p.id))).join('');
+  const meta = `<div class="list-meta"><span>${q ? `${list.length} αποτελέσματα` : `${list.length} ασθενείς`}</span><a href="#/settings" class="sort-link">${ic(P.sort, 14, 2.2)} ${SORT_MODES[mode].short}</a></div>`;
+  if (mode !== 'name' && mode !== 'surname') return meta + list.map(p => patientCard(p, info.get(p.id))).join('');
+  // Αλφαβητικά: επικεφαλίδες γραμμάτων όπως στις Επαφές
+  let html = meta, cur = null;
+  for (const p of list) {
+    const L = sortLetter(sortKey(p, mode));
+    if (L !== cur) { cur = L; html += `<div class="letter">${esc(L)}</div>`; }
+    html += patientCard(p, info.get(p.id));
+  }
+  return html;
+}
+
+/* ---------- Ταξινόμηση ασθενών ---------- */
+const SORT_MODES = {
+  name: { label: 'Όνομα (Α → Ω)', short: 'Όνομα Α→Ω' },
+  surname: { label: 'Επώνυμο (Α → Ω)', short: 'Επώνυμο Α→Ω' },
+  recent: { label: 'Πιο πρόσφατη επίσκεψη', short: 'Πρόσφατη επίσκεψη' },
+  added: { label: 'Νεότεροι ασθενείς πρώτα', short: 'Νεότεροι πρώτα' },
+};
+const getSortMode = () => { const m = store.get('sortMode'); return SORT_MODES[m] ? m : 'name'; };
+const cmpText = (a, b) => a.localeCompare(b, 'el', { sensitivity: 'base', numeric: true });
+function sortKey(p, mode) {
+  const name = String(p.name || '').trim();
+  if (mode !== 'surname') return name;
+  const parts = name.split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1] + ' ' + parts.slice(0, -1).join(' ') : name;
+}
+function sortLetter(key) {
+  const ch = Array.from(norm(key))[0] || '#';
+  const up = ch.toUpperCase();
+  return /\p{L}/u.test(up) ? up : '#';
+}
+function sortPatients(patients, mode, info) {
+  const list = patients.slice();
+  if (mode === 'recent') {
+    const lastOf = p => { const i = info.get(p.id); return (i && i.last) || ''; };
+    return list.sort((a, b) => lastOf(b).localeCompare(lastOf(a)) || cmpText(a.name, b.name));
+  }
+  if (mode === 'added') return list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0) || cmpText(a.name, b.name));
+  return list.sort((a, b) => cmpText(sortKey(a, mode), sortKey(b, mode)) || cmpText(a.name, b.name));
 }
 
 function patientCard(p, info) {
@@ -918,8 +963,14 @@ function shiftMonth(delta) {
 /* ================= Οθόνη: Ρυθμίσεις ================= */
 function viewSettings() {
   const last = Number(store.get('lastBackup') || 0);
+  const sortMode = getSortMode();
   return `
   <header class="large-header"><div class="lh-row"><div><div class="eyebrow">${ic(P.gear, 15, 2.2)} DentNotes</div><h1>Ρυθμίσεις</h1></div></div></header>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Ταξινόμηση ασθενών</div></div>
+    <div class="card">${Object.keys(SORT_MODES).map(m => `<button class="set-row" data-action="set-sort" data-val="${m}" aria-pressed="${m === sortMode}"><span class="set-tx"><div class="set-t">${SORT_MODES[m].label}</div></span><span class="set-check">${m === sortMode ? ic(P.check, 20, 2.6) : ''}</span></button>`).join('')}</div>
+  </div>
 
   <div class="group">
     <div class="group-head"><div class="group-title">Αντίγραφο ασφαλείας</div></div>
@@ -1682,6 +1733,7 @@ const actions = {
   'download-backup': () => { markBackupDone(); return 'native'; },
   'import': () => { const i = $('#import-input'); i.value = ''; i.click(); },
   'wipe': () => wipeAll(),
+  'set-sort': el => { if (SORT_MODES[el.dataset.val]) { store.set('sortMode', el.dataset.val); render({ keep: true }); toast('Ταξινόμηση: ' + SORT_MODES[el.dataset.val].label); } },
   'dismiss': el => { store.set(el.dataset.key, '1'); render({ keep: true }); },
   'snooze-backup': () => { store.set('backupSnooze', String(Date.now() + 3 * 864e5)); render({ keep: true }); },
 };
