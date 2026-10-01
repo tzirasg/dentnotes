@@ -1,0 +1,1790 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DentNotes</title>
+<meta name="description" content="Σημειωματάριο ασθενών οδοντιάτρου">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DentNotes">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#FFF6F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#140C10" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --pink:#FF3D84; --pink-600:#E62E72; --pink-300:#FF8DB8; --pink-100:#FFE3EE; --pink-50:#FFF2F7;
+  --bg:#FFF6F9; --card:#FFFFFF; --text:#22161C; --muted:#8E7C86; --line:#F4E1E9; --fill:#FBEFF4;
+  --green:#1FA774; --green-bg:#E2F6EE; --red:#E5484D; --red-bg:#FDECEC; --gray:#9B8F95; --gray-bg:#F1ECEE;
+  --shadow:0 1px 2px rgba(120,20,60,.05),0 6px 20px rgba(160,30,80,.07);
+  --grad:linear-gradient(135deg,#FF6FA5 0%,#FF3D84 55%,#F72585 100%);
+  --radius:20px; --tab-h:62px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#140C10; --card:#22161C; --text:#F9EEF3; --muted:#A8919C; --line:#34242C; --fill:#2C1D24;
+    --pink-100:#4A1E31; --pink-50:#2E1620; --green-bg:#163128; --red-bg:#3A1A1C; --gray-bg:#2E2428;
+    --shadow:0 1px 0 rgba(255,255,255,.03); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg);-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 28px);min-height:100vh}
+body.locked{overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+a{color:inherit;text-decoration:none}
+svg{display:block;flex-shrink:0}
+.vh{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;left:-9999px}
+#view{max-width:680px;margin:0 auto;padding:0 16px}
+
+/* Headers */
+.large-header{padding-top:calc(env(safe-area-inset-top) + 18px)}
+.lh-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.eyebrow{display:flex;align-items:center;gap:6px;color:var(--pink);font-size:13px;font-weight:700;letter-spacing:.02em}
+h1{font-size:34px;line-height:1.1;margin:4px 0 0;font-weight:800;letter-spacing:-.025em}
+.round-btn{width:42px;height:42px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
+  box-shadow:0 6px 16px rgba(255,61,132,.35);flex-shrink:0;transition:transform .15s}
+.round-btn:active{transform:scale(.92)}
+.search{margin-top:14px;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:0 12px;
+  height:46px;box-shadow:var(--shadow);border:1px solid var(--line);color:var(--muted)}
+.search input{flex:1;min-width:0;border:0;background:transparent;font-size:16px;outline:none;color:var(--text);-webkit-appearance:none;appearance:none;height:100%}
+.search input::placeholder{color:var(--muted)}
+
+.navbar{position:sticky;top:0;z-index:20;margin:0 -16px;padding:calc(env(safe-area-inset-top) + 6px) 8px 6px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);background:color-mix(in srgb,var(--bg) 85%,transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+.nav-back{display:flex;align-items:center;gap:2px;color:var(--pink);font-size:17px;padding:8px 6px;min-height:44px}
+.nav-btn{color:var(--pink);font-size:17px;font-weight:600;padding:8px 10px;min-height:44px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 6px}
+.stat{display:block;padding:12px 12px 11px;border-radius:16px;background:var(--card);box-shadow:var(--shadow);text-align:left;transition:transform .15s}
+.stat:active{transform:scale(.97)}
+.stat.grad{background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(255,61,132,.28)}
+.stat-n{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.stat-l{font-size:12px;font-weight:600;opacity:.75;margin-top:2px}
+.list-meta{font-size:13px;color:var(--muted);font-weight:600;margin:16px 4px 8px}
+
+/* Patient card */
+.pcard{display:flex;width:100%;gap:12px;align-items:center;padding:13px 14px;background:var(--card);border-radius:18px;
+  box-shadow:var(--shadow);text-align:left;margin-bottom:10px;transition:transform .15s}
+.pcard:active{transform:scale(.98)}
+.pc-main{flex:1;min-width:0}
+.pc-name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-sub{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pc-side{text-align:right;flex-shrink:0;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.side-l{font-size:11px;font-weight:600}
+.side-v{font-size:14px;font-weight:700;color:var(--text)}
+.side-v.pink{color:var(--pink)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 8px;border-radius:999px;background:var(--fill);color:var(--muted);font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag.alert{background:var(--red-bg);color:var(--red)}
+.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;font-weight:700;
+  display:grid;place-items:center;flex-shrink:0;font-size:17px;letter-spacing:.02em}
+.avatar.sm{width:36px;height:36px;font-size:13px}
+.avatar.xl{width:92px;height:92px;font-size:34px;margin:0 auto;box-shadow:0 0 0 5px var(--card),0 10px 30px rgba(255,61,132,.3)}
+
+/* Patient detail */
+.hero{text-align:center;padding:6px 0 18px}
+.hero h2{font-size:26px;margin:14px 0 2px;font-weight:800;letter-spacing:-.02em;word-break:break-word}
+.hero-meta{color:var(--muted);font-size:15px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.qa{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 2px 10px;background:var(--card);border-radius:16px;
+  box-shadow:var(--shadow);color:var(--pink);font-size:12px;font-weight:700;text-align:center;transition:transform .15s}
+.qa:active{transform:scale(.95)}
+.qa span{color:var(--text)}
+.qa[aria-disabled="true"]{opacity:.38;pointer-events:none}
+.alert-card{display:flex;gap:12px;padding:14px 16px;background:var(--red-bg);color:var(--red);border-radius:16px;margin-top:16px;border:1px solid rgba(229,72,77,.22)}
+.alert-t{font-weight:800;font-size:15px}
+.alert-x{white-space:pre-wrap;word-break:break-word;font-size:15px;margin-top:2px;color:var(--text)}
+.group{margin-top:24px}
+.group-head{display:flex;justify-content:space-between;align-items:center;padding:0 4px 8px;min-height:32px}
+.group-title{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.group-action{color:var(--pink);font-size:15px;font-weight:600;padding:4px 0 4px 10px;display:flex;align-items:center;gap:4px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.row{display:flex;padding:13px 16px;gap:12px;border-bottom:1px solid var(--line);align-items:flex-start}
+.row:last-child{border-bottom:0}
+.row-l{color:var(--muted);font-size:15px;flex-shrink:0;max-width:48%}
+.row-v{flex:1;text-align:right;font-size:15px;word-break:break-word;white-space:pre-wrap;font-weight:500}
+.row.stack{flex-direction:column;gap:3px}
+.row.stack .row-l{font-size:13px;font-weight:600;max-width:none}
+.row.stack .row-v{text-align:left;font-size:16px}
+.row-v.alert{color:var(--red);font-weight:600}
+.dash{color:var(--muted);font-weight:400}
+.note-text{padding:14px 16px;white-space:pre-wrap;line-height:1.5;word-break:break-word}
+.empty-inline{padding:18px 16px;color:var(--muted);text-align:center;font-size:14px}
+.created{text-align:center;color:var(--muted);font-size:12px;margin:26px 0 6px}
+
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.img-tile{position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:var(--fill);display:block;width:100%}
+.img-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.img-cap{position:absolute;left:0;right:0;bottom:0;padding:14px 7px 5px;font-size:11px;font-weight:600;color:#fff;
+  background:linear-gradient(transparent,rgba(0,0,0,.65));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.img-add{border:2px dashed var(--pink-300);color:var(--pink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;background:var(--pink-50)}
+.img-tile.loading{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+.visit{display:flex;gap:12px;padding:12px 14px;width:100%;text-align:left;border-bottom:1px solid var(--line);align-items:center}
+.visit:last-child{border-bottom:0}
+.visit:active,.vrow-main:active{background:var(--fill)}
+.v-date{width:50px;text-align:center;background:var(--pink-50);border-radius:12px;padding:6px 0;flex-shrink:0}
+.v-day{font-size:20px;font-weight:800;color:var(--pink);line-height:1.1}
+.v-mon{font-size:11px;font-weight:700;color:var(--muted)}
+.v-main{flex:1;min-width:0}
+.v-title{font-size:15px;font-weight:700;word-break:break-word}
+.v-sub{font-size:13px;color:var(--muted)}
+.v-notes{font-size:13px;color:var(--text);opacity:.8;margin-top:2px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pill{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.st-done{background:var(--green-bg);color:var(--green)}
+.st-scheduled{background:var(--pink-100);color:var(--pink)}
+.st-missed{background:var(--gray-bg);color:var(--gray)}
+
+/* Calendar */
+.cal{padding:14px 12px 12px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.cal-title{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.icon-btn{width:38px;height:38px;border-radius:50%;background:var(--pink-50);color:var(--pink);display:grid;place-items:center}
+.icon-btn:active{transform:scale(.92)}
+.cal-wd{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:var(--muted);font-weight:700;margin:12px 0 4px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;touch-action:pan-y}
+.cal-day{height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;font-size:16px;font-weight:600;position:relative}
+.cal-day.out{opacity:.32}
+.cal-day.today{color:var(--pink);font-weight:800;background:var(--pink-50)}
+.cal-day.sel{background:var(--grad);color:#fff;box-shadow:0 6px 14px rgba(255,61,132,.32)}
+.dots{display:flex;gap:3px;height:5px;margin-top:3px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--pink)}
+.dot.done{background:var(--green)}
+.dot.missed{background:var(--gray)}
+.cal-day.sel .dot{background:#fff}
+.cal-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:0 2px;font-size:13px;color:var(--muted);gap:8px}
+.chip{padding:7px 13px;border-radius:999px;background:var(--pink-50);color:var(--pink);font-size:13px;font-weight:700;border:1px solid var(--pink-100)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.vrow{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+.vrow:last-child{border-bottom:0}
+.vrow-main{flex:1;display:flex;gap:12px;padding:11px 6px 11px 14px;text-align:left;align-items:center;min-width:0}
+.time-pill{font-variant-numeric:tabular-nums;background:var(--pink-50);color:var(--pink);padding:6px 0;border-radius:10px;font-size:14px;font-weight:800;width:58px;text-align:center;flex-shrink:0}
+.time-pill.st-done{background:var(--green-bg);color:var(--green)}
+.time-pill.st-missed{background:var(--gray-bg);color:var(--gray)}
+.vr-text{flex:1;min-width:0}
+.vr-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr-sub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vrow-edit{padding:0 16px;color:var(--muted);display:grid;place-items:center}
+
+/* Banners / empty */
+.banner{display:flex;gap:12px;align-items:center;padding:12px 12px 12px 14px;border-radius:16px;background:var(--pink-50);border:1px solid var(--pink-100);margin-top:14px;font-size:14px}
+.banner .b-ic{color:var(--pink)}
+.banner .b-tx{flex:1}
+.banner b{font-weight:700}
+.banner .b-act{color:var(--pink);font-weight:700;white-space:nowrap;padding:6px}
+.banner .b-x{color:var(--muted);padding:6px}
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty .big{width:84px;height:84px;margin:0 auto;border-radius:26px;background:var(--grad);display:grid;place-items:center;color:#fff;box-shadow:0 12px 30px rgba(255,61,132,.3)}
+.empty h3{color:var(--text);font-size:20px;margin:18px 0 6px}
+.empty p{margin:0 0 20px}
+.empty.small{padding:30px 16px}
+
+/* Buttons */
+.btn{display:flex;width:100%;justify-content:center;align-items:center;gap:8px;padding:15px;border-radius:14px;font-size:17px;font-weight:700;
+  background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(255,61,132,.28);transition:transform .15s}
+.btn:active{transform:scale(.98)}
+.btn.secondary{background:var(--card);color:var(--pink);box-shadow:var(--shadow)}
+.btn.danger{background:var(--card);color:var(--red);box-shadow:var(--shadow)}
+.btn.inline{display:inline-flex;width:auto;padding:12px 22px}
+.btn + .btn{margin-top:10px}
+.set-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.set-row:last-child{border-bottom:0}
+.set-row:active{background:var(--fill)}
+.set-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff;background:var(--grad);flex-shrink:0}
+.set-ic.red{background:var(--red)}
+.set-tx{flex:1;min-width:0}
+.set-t{font-size:16px;font-weight:600}
+.set-s{font-size:13px;color:var(--muted)}
+.steps{margin:0;padding:14px 16px 14px 36px;font-size:15px;line-height:1.55}
+.steps li+li{margin-top:6px}
+
+/* Tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;
+  background:var(--card);background:color-mix(in srgb,var(--card) 84%,transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar-in{display:flex;width:100%;max-width:680px}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;font-size:11px;font-weight:700;color:var(--muted);height:var(--tab-h);justify-content:center}
+.tabbar a.active{color:var(--pink)}
+
+/* Sheets */
+#sheet-root{position:fixed;inset:0;z-index:50}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(30,8,18,.42);opacity:0;transition:opacity .3s}
+#sheet-root.open .sheet-backdrop{opacity:1}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-width:680px;margin:0 auto;height:calc(100% - env(safe-area-inset-top) - 18px);
+  background:var(--bg);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.85,.25,1);
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+.sheet.short{height:auto;max-height:calc(100% - env(safe-area-inset-top) - 18px)}
+#sheet-root.open .sheet{transform:none}
+.sheet-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 8px;border-bottom:1px solid var(--line);background:var(--card);flex-shrink:0}
+.sh-title{font-size:17px;font-weight:700;text-align:center;padding:0 4px}
+.sh-btn{color:var(--pink);font-size:17px;padding:10px 8px;min-height:44px}
+.sh-btn.l{justify-self:start}
+.sh-btn.r{justify-self:end;font-weight:700}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px 16px calc(env(safe-area-inset-bottom) + 40px)}
+.flabel{display:block;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;padding:0 6px 7px}
+.fgroup{background:var(--card);border-radius:16px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
+.field{display:flex;align-items:center;padding:0 16px;min-height:50px;border-bottom:1px solid var(--line);gap:10px}
+.field:last-child{border-bottom:0}
+.field > label{flex:0 0 auto;max-width:58%;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field input,.field select{flex:1;min-width:0;border:0;background:transparent;font-size:16px;color:var(--text);padding:14px 0;outline:none;text-align:right;
+  -webkit-appearance:none;appearance:none;border-radius:0}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);opacity:.7}
+.field input[type=date],.field input[type=time]{min-height:48px;display:block;color:var(--pink);font-weight:600}
+.field input::-webkit-date-and-time-value{text-align:right}
+.field.stack{flex-direction:column;align-items:stretch;padding:12px 16px;gap:4px}
+.field.stack > label{width:auto;font-size:13px;color:var(--muted);font-weight:700}
+.field.stack select{text-align:left;padding:6px 0;color:var(--pink);font-weight:600}
+.field textarea{font-size:16px;border:0;background:transparent;resize:none;min-height:66px;color:var(--text);outline:none;width:100%;padding:2px 0;line-height:1.45;overflow:hidden}
+.field.err{background:var(--red-bg)}
+.field.err > label{color:var(--red)}
+.err-msg{color:var(--red);font-size:13px;font-weight:600;padding:0 6px;margin:-14px 0 18px}
+.req{color:var(--pink)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--fill);border-radius:12px;padding:3px;gap:3px;margin-bottom:22px}
+.seg button{padding:9px 4px;border-radius:9px;font-size:14px;font-weight:700;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 14px;border-top:1px solid var(--line)}
+.chip-s{padding:7px 12px;border-radius:999px;background:var(--pink-50);color:var(--pink);font-size:13px;font-weight:700;border:1px solid var(--pink-100)}
+.chip-s:active{background:var(--pink-100)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* Dialog */
+#dialog-root{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px}
+.dlg-backdrop{position:absolute;inset:0;background:rgba(20,6,12,.4);opacity:0;transition:opacity .2s}
+.dlg{position:relative;width:min(300px,100%);background:var(--card);border-radius:16px;text-align:center;overflow:hidden;
+  transform:scale(1.08);opacity:0;transition:transform .2s,opacity .2s;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+#dialog-root.open .dlg-backdrop{opacity:1}
+#dialog-root.open .dlg{transform:none;opacity:1}
+.dlg-body{padding:20px 16px 16px}
+.dlg-t{font-size:17px;font-weight:700}
+.dlg-m{font-size:14px;color:var(--muted);margin-top:6px;white-space:pre-wrap;line-height:1.4}
+.dlg-in{margin-top:14px;width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px;outline:none;color:var(--text)}
+.dlg-btns{display:flex;border-top:1px solid var(--line)}
+.dlg-btns button{flex:1;padding:13px 8px;font-size:17px;color:var(--pink);text-align:center}
+.dlg-btns button+button{border-left:1px solid var(--line)}
+.dlg-btns.vert{flex-direction:column}
+.dlg-btns.vert button+button{border-left:0;border-top:1px solid var(--line)}
+.dlg-btns .bold{font-weight:700}
+.dlg-btns .danger{color:var(--red);font-weight:700}
+
+/* Toast / busy */
+#toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 18px);transform:translate(-50%,16px);opacity:0;
+  background:rgba(34,22,28,.94);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;z-index:90;
+  transition:opacity .25s,transform .25s;pointer-events:none;width:max-content;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#busy{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(20,6,12,.25)}
+.busy-box{background:var(--card);padding:22px 26px;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:15px;font-weight:600;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.spinner{width:32px;height:32px;border-radius:50%;border:3px solid var(--pink-100);border-top-color:var(--pink);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Viewer */
+#viewer{position:fixed;inset:0;z-index:80;background:#000;color:#fff;overscroll-behavior:contain}
+.v-stage{position:absolute;inset:0;overflow:hidden;touch-action:none}
+.v-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;transform-origin:center center;will-change:transform}
+.v-img.anim{transition:transform .25s ease-out}
+.v-top{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;gap:10px;
+  padding:calc(env(safe-area-inset-top) + 8px) 12px 18px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+.v-info{flex:1;min-width:0;text-align:center}
+.v-cap{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-date{font-size:12px;opacity:.75}
+.v-ib{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;flex-shrink:0}
+.v-count{width:40px;text-align:center;font-size:13px;opacity:.8;flex-shrink:0}
+.v-bottom{position:absolute;bottom:0;left:0;right:0;z-index:2;display:flex;justify-content:space-around;
+  padding:18px 12px calc(env(safe-area-inset-bottom) + 10px);background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.v-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:6px 14px}
+.v-btn.danger{color:#ff7b93}
+</style>
+</head>
+<body>
+<main id="view"></main>
+
+<nav class="tabbar" aria-label="Κύριο μενού">
+  <div class="tabbar-in">
+    <a href="#/" data-tab="patients"><span data-ic="users"></span><span>Ασθενείς</span></a>
+    <a href="#/calendar" data-tab="calendar"><span data-ic="calendar"></span><span>Ημερολόγιο</span></a>
+    <a href="#/settings" data-tab="settings"><span data-ic="gear"></span><span>Ρυθμίσεις</span></a>
+  </div>
+</nav>
+
+<div id="sheet-root" hidden></div>
+<div id="dialog-root" hidden></div>
+<div id="viewer" hidden>
+  <div class="v-stage" id="v-stage"><img class="v-img" id="v-img" alt="Ακτινογραφία" draggable="false"></div>
+  <div class="v-top">
+    <button class="v-ib" data-action="v-close" aria-label="Κλείσιμο"><span data-ic="close"></span></button>
+    <div class="v-info"><div class="v-cap" id="v-cap"></div><div class="v-date" id="v-date"></div></div>
+    <div class="v-count" id="v-count"></div>
+  </div>
+  <div class="v-bottom">
+    <button class="v-btn" data-action="v-caption"><span data-ic="edit"></span>Λεζάντα</button>
+    <button class="v-btn" data-action="v-share"><span data-ic="share"></span>Αποθήκευση</button>
+    <button class="v-btn danger" data-action="v-delete"><span data-ic="trash"></span>Διαγραφή</button>
+  </div>
+</div>
+<div id="busy" hidden><div class="busy-box"><div class="spinner"></div><div id="busy-text">Παρακαλώ περιμένετε…</div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="img-input" class="vh" accept="image/*" multiple tabindex="-1" aria-hidden="true">
+<input type="file" id="import-input" class="vh" tabindex="-1" aria-hidden="true">
+
+<script>
+'use strict';
+
+/* ================= Βοηθητικά ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+  : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+const pad = n => String(n).padStart(2, '0');
+const toKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const todayKey = () => toKey(new Date());
+const isValidKey = k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k) && toKey(fromKey(k)) === k;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+const MONTHS = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'];
+const MONTHS_GEN = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου', 'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
+const MONTHS_SHORT = ['ΙΑΝ', 'ΦΕΒ', 'ΜΑΡ', 'ΑΠΡ', 'ΜΑΪ', 'ΙΟΥΝ', 'ΙΟΥΛ', 'ΑΥΓ', 'ΣΕΠ', 'ΟΚΤ', 'ΝΟΕ', 'ΔΕΚ'];
+const DAYS = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+const WEEK_HEAD = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
+
+const fmtDate = k => { const d = fromKey(k); return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()}`; };
+const fmtDayLong = k => {
+  const d = fromKey(k);
+  const y = d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '';
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS_GEN[d.getMonth()]}${y}`;
+};
+const fmtDM = k => {
+  const d = fromKey(k);
+  const y = d.getFullYear() !== new Date().getFullYear() ? '/' + String(d.getFullYear()).slice(2) : '';
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}${y}`;
+};
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/ς/g, 'σ');
+const initials = name => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  const first = Array.from(parts[0])[0] || '';
+  const last = parts.length > 1 ? (Array.from(parts[parts.length - 1])[0] || '') : '';
+  return (first + last).toUpperCase();
+};
+const fmtSize = b => b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
+};
+
+/* ================= Εικονίδια ================= */
+const ic = (body, size = 22, sw = 2) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const P = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  chevL: '<path d="m15 18-6-6 6-6"/>',
+  chevR: '<path d="m9 18 6-6-6-6"/>',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  msg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  calendar: '<rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/>',
+  calPlus: '<rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18M12 13.5v5M9.5 16h5"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5L7 22"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
+  share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
+  close: '<path d="M18 6 6 18M6 6l12 12"/>',
+  alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  phoneApp: '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
+  db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  tooth: '<path d="M12 5.5C10 4 6.5 3 5 5.5c-1.6 2.6-.6 5.6.6 7.6.9 1.5.8 3.6 1.3 5.6.4 1.6 2 1.6 2.4 0 .4-1.6.8-4 2.7-4s2.3 2.4 2.7 4c.4 1.6 2 1.6 2.4 0 .5-2 .4-4.1 1.3-5.6 1.2-2 2.2-5 .6-7.6C17.5 3 14 4 12 5.5z"/>',
+};
+const ICON = {};
+for (const k in P) ICON[k] = ic(P[k]);
+ICON.plusB = ic(P.plus, 22, 2.6);
+ICON.chevLB = ic(P.chevL, 26, 2.4);
+ICON.alertSm = ic(P.alert, 12, 2.6);
+ICON.toothSm = ic(P.tooth, 15, 2.2);
+ICON.toothBig = ic(P.tooth, 42, 1.8);
+ICON.chevRSm = ic(P.chevR, 18, 2.2);
+ICON.editSm = ic(P.edit, 18, 2);
+function hydrateIcons(root = document) {
+  $$('[data-ic]', root).forEach(el => { if (!el.firstChild) el.innerHTML = ICON[el.dataset.ic] || ''; });
+}
+
+const AV_COLORS = [['#FF8DB8', '#FF3D84'], ['#FFB08A', '#FF5E8A'], ['#D29BFF', '#F25CA2'], ['#FF8A9B', '#E11D58'], ['#F9A8D4', '#DB2777'], ['#FDBA74', '#EC4899']];
+function avatar(p, cls = '') {
+  let h = 0;
+  for (const ch of String(p.name || '')) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  const [a, b] = AV_COLORS[h % AV_COLORS.length];
+  return `<div class="avatar ${cls}" style="--a:${a};--b:${b}" aria-hidden="true">${esc(initials(p.name))}</div>`;
+}
+
+const STATUS = {
+  done: { label: 'Ήρθε', short: 'Ήρθε' },
+  scheduled: { label: 'Προγραμματισμένη', short: 'Ραντεβού' },
+  missed: { label: 'Δεν ήρθε', short: 'Δεν ήρθε' },
+};
+const defaultStatus = date => (date <= todayKey() ? 'done' : 'scheduled');
+const statusPill = v => { const s = STATUS[v.status] ? v.status : 'done'; return `<span class="pill st-${s}">${STATUS[s].short}</span>`; };
+const TREATMENTS = ['Εξέταση', 'Καθαρισμός', 'Σφράγισμα', 'Απονεύρωση', 'Εξαγωγή', 'Ακτινογραφία', 'Στεφάνη', 'Επανέλεγχος'];
+
+/* ================= Βάση δεδομένων (IndexedDB) ================= */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) { reject(new Error('Ο browser δεν υποστηρίζει αποθήκευση δεδομένων.')); return; }
+      const req = indexedDB.open('dentnotes', 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('patients')) db.createObjectStore('patients', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('visits')) db.createObjectStore('visits', { keyPath: 'id' }).createIndex('patientId', 'patientId');
+        if (!db.objectStoreNames.contains('images')) db.createObjectStore('images', { keyPath: 'id' }).createIndex('patientId', 'patientId');
+      };
+      req.onsuccess = () => {
+        this.db = req.result;
+        this.db.onclose = () => { this.db = null; };
+        this.db.onversionchange = () => { this.db.close(); this.db = null; };
+        resolve();
+      };
+      req.onerror = () => reject(req.error || new Error('Αποτυχία ανοίγματος βάσης'));
+      req.onblocked = () => reject(new Error('Η βάση είναι ανοιχτή σε άλλη καρτέλα.'));
+    });
+  },
+  _run(stores, mode, fn) {
+    return new Promise((resolve, reject) => {
+      let t;
+      try { t = this.db.transaction(stores, mode); } catch (e) { reject(e); return; }
+      let result;
+      const req = fn(t);
+      if (req) req.onsuccess = () => { result = req.result; };
+      t.oncomplete = () => resolve(result);
+      t.onerror = () => reject(t.error || new Error('Σφάλμα βάσης'));
+      t.onabort = () => reject(t.error || new Error('Η ενέργεια ακυρώθηκε'));
+    });
+  },
+  // Το iOS μερικές φορές κλείνει τη σύνδεση όταν η εφαρμογή είναι στο παρασκήνιο: ξανανοίγουμε και επαναλαμβάνουμε.
+  async run(stores, mode, fn) {
+    if (!this.db) await this.open();
+    try { return await this._run(stores, mode, fn); }
+    catch (e) {
+      if (e && (e.name === 'InvalidStateError' || /connection|closing|closed/i.test(e.message || ''))) {
+        this.db = null; await this.open();
+        return this._run(stores, mode, fn);
+      }
+      throw e;
+    }
+  },
+  all(s) { return this.run(s, 'readonly', t => t.objectStore(s).getAll()); },
+  get(s, id) { return this.run(s, 'readonly', t => t.objectStore(s).get(id)); },
+  put(s, obj) { return this.run(s, 'readwrite', t => t.objectStore(s).put(obj)); },
+  del(s, id) { return this.run(s, 'readwrite', t => t.objectStore(s).delete(id)); },
+  byPatient(s, pid) { return this.run(s, 'readonly', t => t.objectStore(s).index('patientId').getAll(pid)); },
+  putMany(s, list) { return this.run(s, 'readwrite', t => { const os = t.objectStore(s); list.forEach(o => os.put(o)); }); },
+  deletePatient(pid) {
+    return this.run(['patients', 'visits', 'images'], 'readwrite', t => {
+      t.objectStore('patients').delete(pid);
+      for (const s of ['visits', 'images']) {
+        const os = t.objectStore(s);
+        const r = os.index('patientId').getAllKeys(pid);
+        r.onsuccess = () => r.result.forEach(k => os.delete(k));
+      }
+    });
+  },
+  clearAll() {
+    return this.run(['patients', 'visits', 'images'], 'readwrite', t => {
+      ['patients', 'visits', 'images'].forEach(s => t.objectStore(s).clear());
+    });
+  },
+};
+
+/* ================= Κατάσταση ================= */
+const state = {
+  patients: [],
+  visits: [],
+  imgs: new Map(),     // patientId -> [{id, patientId, blob, thumbBlob, caption, date, createdAt}]
+  urls: new Map(),     // imageId -> {thumb, full}
+  calY: 0, calM: 0, calSel: todayKey(),
+  search: '',
+  prevRoute: null,
+  scroll: {},
+  sheet: null,         // context της ανοιχτής φόρμας
+  imgTarget: null,
+  lastToday: todayKey(),
+  saving: false,
+};
+const getPatient = id => state.patients.find(p => p.id === id);
+const byDateAsc = (a, b) => (a.date + (a.time || '99:99')).localeCompare(b.date + (b.time || '99:99'));
+const byDateDesc = (a, b) => byDateAsc(b, a);
+
+function requestPersist() {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* ignore */ }
+}
+
+/* ================= Εικόνες ================= */
+function loadImg(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => resolve({ img, url });
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Η εικόνα δεν μπόρεσε να διαβαστεί')); };
+    img.src = url;
+  });
+}
+async function resizeImage(blob, max, quality) {
+  const { img, url } = await loadImg(blob);
+  const c = document.createElement('canvas');
+  try {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    if (!w || !h) throw new Error('Κενή εικόνα');
+    const s = Math.min(1, max / Math.max(w, h));
+    c.width = Math.max(1, Math.round(w * s));
+    c.height = Math.max(1, Math.round(h * s));
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((res, rej) => c.toBlob(b => (b ? res(b) : rej(new Error('toBlob'))), 'image/jpeg', quality));
+  } finally {
+    URL.revokeObjectURL(url);
+    c.width = 0; c.height = 0; // απελευθέρωση μνήμης canvas (σημαντικό στο iOS)
+  }
+}
+// Στη βάση αποθηκεύουμε ArrayBuffer (πιο αξιόπιστο σε όλες τις εκδόσεις iOS), στη μνήμη Blob.
+const recToMem = r => ({
+  id: r.id, patientId: r.patientId, caption: r.caption || '', date: r.date, createdAt: r.createdAt,
+  blob: new Blob([r.data], { type: r.type || 'image/jpeg' }),
+  thumbBlob: new Blob([r.thumb || r.data], { type: r.thumb ? 'image/jpeg' : (r.type || 'image/jpeg') }),
+});
+async function getImages(pid) {
+  if (state.imgs.has(pid)) return state.imgs.get(pid);
+  const recs = await DB.byPatient('images', pid);
+  const list = recs.map(recToMem);
+  state.imgs.set(pid, list);
+  return list;
+}
+const sortedImages = pid => (state.imgs.get(pid) || []).slice().sort((a, b) => b.createdAt - a.createdAt);
+function imgUrl(im, kind) {
+  let u = state.urls.get(im.id);
+  if (!u) { u = {}; state.urls.set(im.id, u); }
+  if (!u[kind]) u[kind] = URL.createObjectURL(kind === 'full' ? im.blob : im.thumbBlob);
+  return u[kind];
+}
+function revokeImage(id) {
+  const u = state.urls.get(id);
+  if (u) { if (u.thumb) URL.revokeObjectURL(u.thumb); if (u.full) URL.revokeObjectURL(u.full); state.urls.delete(id); }
+}
+
+/* ================= Router ================= */
+function parseRoute(hash = location.hash) {
+  const h = String(hash || '').replace(/^#\/?/, '');
+  const parts = h.split('/');
+  if (parts[0] === 'p' && parts[1]) {
+    let id = parts[1];
+    try { id = decodeURIComponent(id); } catch (e) { /* ignore */ }
+    return { name: 'patient', id };
+  }
+  if (parts[0] === 'calendar') return { name: 'calendar', date: parts[1] || null };
+  if (parts[0] === 'settings') return { name: 'settings' };
+  return { name: 'patients' };
+}
+const routeKey = r => (r.name === 'patient' ? 'p:' + r.id : r.name);
+const go = hash => { if (location.hash !== hash) location.hash = hash; else render({ keep: true }); };
+
+function onHashChange(e) {
+  let old = null;
+  try { old = e && e.oldURL ? parseRoute(new URL(e.oldURL).hash) : null; } catch (err) { old = null; }
+  if (old) { state.scroll[routeKey(old)] = window.scrollY; state.prevRoute = old; }
+  closeViewer();
+  closeSheet(true);
+  closeDialog();
+  render({ restore: true });
+}
+
+function render(opts = {}) {
+  const r = parseRoute();
+  const y = window.scrollY;
+  const view = $('#view');
+  let html;
+  if (r.name === 'patient') {
+    const p = getPatient(r.id);
+    if (!p) { history.replaceState(null, '', '#/'); return render(); }
+    html = viewPatient(p);
+  } else if (r.name === 'calendar') html = viewCalendar(r);
+  else if (r.name === 'settings') html = viewSettings();
+  else html = viewPatients();
+  view.innerHTML = html;
+
+  const tab = r.name === 'patient' ? 'patients' : r.name;
+  $$('.tabbar a').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
+  document.title = r.name === 'patient' ? `${getPatient(r.id).name} · DentNotes` : 'DentNotes';
+
+  if (r.name === 'patient' && !state.imgs.has(r.id)) {
+    const pid = r.id;
+    getImages(pid).then(() => refreshImages(pid)).catch(err => {
+      console.error(err);
+      const g = $('#img-grid'); if (g) g.innerHTML = `<div class="empty-inline" style="grid-column:1/-1">Σφάλμα φόρτωσης εικόνων</div>`;
+    });
+  }
+  if (r.name === 'settings') fillStorageInfo();
+
+  if (opts.keep) window.scrollTo(0, y);
+  else if (opts.restore && r.name !== 'patient') window.scrollTo(0, state.scroll[routeKey(r)] || 0);
+  else window.scrollTo(0, 0);
+}
+
+/* ================= Οθόνη: Λίστα ασθενών ================= */
+function visitInfoMap() {
+  const today = todayKey();
+  const m = new Map();
+  for (const v of state.visits) {
+    let o = m.get(v.patientId);
+    if (!o) { o = { last: null, next: null, count: 0 }; m.set(v.patientId, o); }
+    o.count++;
+    if (v.date <= today && v.status !== 'missed' && v.status !== 'scheduled') { if (!o.last || v.date > o.last) o.last = v.date; }
+    if (v.date >= today && v.status === 'scheduled') { if (!o.next || v.date < o.next) o.next = v.date; }
+  }
+  return m;
+}
+
+function banners() {
+  let out = '';
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS && !navigator.standalone && !store.get('hideInstall')) {
+    out += `<div class="banner"><span class="b-ic">${ICON.phoneApp}</span><div class="b-tx"><b>Εγκατάσταση:</b> πάτα <b>Κοινοποίηση</b> ${ic(P.share, 14, 2.2).replace('<svg', '<svg style="display:inline;vertical-align:-2px"')} και μετά <b>«Προσθήκη στην οθόνη Αφετηρίας»</b>.</div><button class="b-x" data-action="dismiss" data-key="hideInstall" aria-label="Απόκρυψη">${ic(P.close, 18)}</button></div>`;
+  }
+  if (state.patients.length) {
+    const last = Number(store.get('lastBackup') || 0);
+    const snooze = Number(store.get('backupSnooze') || 0);
+    const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+    if ((days === null || days >= 14) && Date.now() > snooze) {
+      out += `<div class="banner"><span class="b-ic">${ICON.shield}</span><div class="b-tx">${days === null ? 'Δεν έχεις κάνει ακόμα <b>αντίγραφο ασφαλείας</b>.' : `Τελευταίο αντίγραφο ασφαλείας πριν <b>${days} ημέρες</b>.`}</div><button class="b-act" data-action="export">Backup</button><button class="b-x" data-action="snooze-backup" aria-label="Αργότερα">${ic(P.close, 18)}</button></div>`;
+    }
+  }
+  return out;
+}
+
+function viewPatients() {
+  const today = todayKey();
+  const todayCount = state.visits.filter(v => v.date === today).length;
+  const monthCount = state.visits.filter(v => v.date.slice(0, 7) === today.slice(0, 7)).length;
+  return `
+  <header class="large-header">
+    <div class="lh-row">
+      <div><div class="eyebrow">${ICON.toothSm} DentNotes</div><h1>Ασθενείς</h1></div>
+      <button class="round-btn" data-action="new-patient" aria-label="Νέος ασθενής">${ICON.plusB}</button>
+    </div>
+    ${state.patients.length ? `<label class="search">${ICON.search}<input id="search" type="search" placeholder="Όνομα, τηλέφωνο, αριθμός…" value="${esc(state.search)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></label>` : ''}
+  </header>
+  ${banners()}
+  ${state.patients.length ? `
+  <div class="stats">
+    <div class="stat grad"><div class="stat-n">${state.patients.length}</div><div class="stat-l">Ασθενείς</div></div>
+    <button class="stat" data-action="goto-cal" data-date="${today}"><div class="stat-n">${todayCount}</div><div class="stat-l">Σήμερα</div></button>
+    <button class="stat" data-action="goto-cal" data-date="${today}"><div class="stat-n">${monthCount}</div><div class="stat-l">Τον μήνα</div></button>
+  </div>` : ''}
+  <div id="plist">${patientListHTML()}</div>`;
+}
+
+function patientListHTML() {
+  if (!state.patients.length) {
+    return `<div class="empty"><div class="big">${ICON.toothBig}</div><h3>Καμία καρτέλα ακόμα</h3><p>Δημιούργησε την πρώτη καρτέλα ασθενή.</p><button class="btn inline" data-action="new-patient">${ICON.plus} Νέος ασθενής</button></div>`;
+  }
+  const raw = state.search.trim();
+  const q = norm(raw);
+  const qDigits = raw.replace(/\D/g, '');
+  let list = state.patients.slice().sort((a, b) => a.name.localeCompare(b.name, 'el', { sensitivity: 'base' }));
+  if (q) {
+    list = list.filter(p => norm([p.name, p.phone, p.facultyNo, p.ambulatoryNo, p.origin].join(' ')).includes(q)
+      || (qDigits.length >= 3 && String(p.phone || '').replace(/\D/g, '').includes(qDigits)));
+  }
+  if (!list.length) return `<div class="empty small">Δεν βρέθηκε ασθενής για «${esc(raw)}»</div>`;
+  const info = visitInfoMap();
+  return `<div class="list-meta">${q ? `${list.length} αποτελέσματα` : 'Όλοι οι ασθενείς'}</div>` + list.map(p => patientCard(p, info.get(p.id))).join('');
+}
+
+function patientCard(p, info) {
+  const sub = [p.age !== '' && p.age != null ? `${p.age} ετών` : '', p.origin].filter(Boolean).join(' · ') || p.phone || 'Χωρίς στοιχεία';
+  const tags = [];
+  if (p.allergies && p.allergies.trim()) tags.push(`<span class="tag alert">${ICON.alertSm} Αλλεργία</span>`);
+  if (p.facultyNo) tags.push(`<span class="tag">Fac. ${esc(p.facultyNo)}</span>`);
+  if (p.ambulatoryNo) tags.push(`<span class="tag">Amb. ${esc(p.ambulatoryNo)}</span>`);
+  let side = '';
+  if (info && info.next) side = `<div><div class="side-l">Ραντεβού</div><div class="side-v pink">${fmtDM(info.next)}</div></div>`;
+  else if (info && info.last) side = `<div><div class="side-l">Τελευταία</div><div class="side-v">${fmtDM(info.last)}</div></div>`;
+  return `<button class="pcard" data-action="open-patient" data-id="${esc(p.id)}">
+    ${avatar(p)}
+    <div class="pc-main"><div class="pc-name">${esc(p.name)}</div><div class="pc-sub">${esc(sub)}</div>${tags.length ? `<div class="pc-tags">${tags.join('')}</div>` : ''}</div>
+    <div class="pc-side">${side}${ICON.chevRSm}</div>
+  </button>`;
+}
+
+/* ================= Οθόνη: Καρτέλα ασθενή ================= */
+const dash = '<span class="dash">—</span>';
+const row = (l, v) => `<div class="row"><div class="row-l">${l}</div><div class="row-v">${v !== '' && v != null ? esc(v) : dash}</div></div>`;
+const stackRow = (l, v, cls = '') => `<div class="row stack"><div class="row-l">${l}</div><div class="row-v ${v ? cls : ''}">${v ? esc(v) : dash}</div></div>`;
+
+function viewPatient(p) {
+  const fromCal = state.prevRoute && state.prevRoute.name === 'calendar';
+  const visits = state.visits.filter(v => v.patientId === p.id).sort(byDateDesc);
+  const phone = String(p.phone || '').replace(/[^\d+]/g, '');
+  const meta = [p.age !== '' && p.age != null ? `${p.age} ετών` : '', p.origin ? `από ${p.origin}` : ''].filter(Boolean).join(' · ');
+  const hasHistory = p.allergies || p.medications || p.history;
+  const imgs = state.imgs.get(p.id);
+  return `
+  <nav class="navbar">
+    <button class="nav-back" data-action="back">${ICON.chevLB}<span>${fromCal ? 'Ημερολόγιο' : 'Ασθενείς'}</span></button>
+    <button class="nav-btn" data-action="edit-patient" data-id="${esc(p.id)}">Επεξεργασία</button>
+  </nav>
+  <section class="hero">
+    ${avatar(p, 'xl')}
+    <h2>${esc(p.name)}</h2>
+    ${meta ? `<div class="hero-meta">${esc(meta)}</div>` : ''}
+  </section>
+  <div class="quick">
+    <a class="qa" ${phone ? `href="tel:${esc(phone)}"` : 'aria-disabled="true"'}>${ICON.phone}<span>Κλήση</span></a>
+    <a class="qa" ${phone ? `href="sms:${esc(phone)}"` : 'aria-disabled="true"'}>${ICON.msg}<span>Μήνυμα</span></a>
+    <button class="qa" data-action="new-visit" data-id="${esc(p.id)}">${ICON.calPlus}<span>Επίσκεψη</span></button>
+    <button class="qa" data-action="add-image" data-id="${esc(p.id)}">${ICON.image}<span>Ακτινογρ.</span></button>
+  </div>
+  ${p.allergies && p.allergies.trim() ? `<div class="alert-card">${ICON.alert}<div><div class="alert-t">Προσοχή — Αλλεργίες</div><div class="alert-x">${esc(p.allergies)}</div></div></div>` : ''}
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Στοιχεία</div></div>
+    <div class="card">
+      ${row('Τηλέφωνο', p.phone)}
+      ${row('Faculty number', p.facultyNo)}
+      ${row('Ambulatory number', p.ambulatoryNo)}
+      ${row('Ηλικία', p.age !== '' && p.age != null ? `${p.age}` : '')}
+      ${row('Από πού είναι', p.origin)}
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Ιατρικό ιστορικό</div><button class="group-action" data-action="edit-patient" data-id="${esc(p.id)}" data-focus="allergies">${hasHistory ? 'Αλλαγή' : 'Προσθήκη'}</button></div>
+    <div class="card">${hasHistory
+      ? stackRow('Σημαντικές αλλεργίες', p.allergies, 'alert') + stackRow('Φάρμακα', p.medications) + stackRow('Παθήσεις / ιστορικό', p.history)
+      : '<div class="empty-inline">Δεν έχει καταχωρηθεί ιστορικό</div>'}</div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Σημειώσεις</div><button class="group-action" data-action="edit-patient" data-id="${esc(p.id)}" data-focus="notes">${p.notes ? 'Αλλαγή' : 'Προσθήκη'}</button></div>
+    <div class="card">${p.notes ? `<div class="note-text">${esc(p.notes)}</div>` : '<div class="empty-inline">Καμία σημείωση</div>'}</div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Ακτινογραφίες <span id="img-count">${imgs ? `(${imgs.length})` : ''}</span></div><button class="group-action" data-action="add-image" data-id="${esc(p.id)}">${ic(P.plus, 16, 2.6)} Προσθήκη</button></div>
+    <div class="img-grid" id="img-grid">${imagesGridHTML(p.id)}</div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Ιστορικό επισκέψεων (${visits.length})</div><button class="group-action" data-action="new-visit" data-id="${esc(p.id)}">${ic(P.plus, 16, 2.6)} Νέα</button></div>
+    <div class="card">${visits.length ? visits.map(visitItem).join('') : '<div class="empty-inline">Δεν υπάρχουν επισκέψεις</div>'}</div>
+  </div>
+  <div class="created">Καρτέλα από ${p.createdAt ? fmtDate(toKey(new Date(p.createdAt))) : '—'}</div>`;
+}
+
+function imagesGridHTML(pid) {
+  const list = state.imgs.has(pid) ? sortedImages(pid) : null;
+  const add = `<button class="img-tile img-add" data-action="add-image" data-id="${esc(pid)}">${ICON.plus}<span>Προσθήκη</span></button>`;
+  if (!list) return add + '<div class="img-tile loading"></div><div class="img-tile loading"></div>';
+  return add + list.map((im, i) => `<button class="img-tile" data-action="view-image" data-pid="${esc(pid)}" data-idx="${i}" aria-label="Προβολή εικόνας">
+      <img src="${imgUrl(im, 'thumb')}" alt="">${im.caption ? `<span class="img-cap">${esc(im.caption)}</span>` : ''}</button>`).join('');
+}
+function refreshImages(pid) {
+  const r = parseRoute();
+  if (r.name !== 'patient' || r.id !== pid) return;
+  const g = $('#img-grid'); if (g) g.innerHTML = imagesGridHTML(pid);
+  const c = $('#img-count'); if (c) c.textContent = `(${(state.imgs.get(pid) || []).length})`;
+}
+
+function visitItem(v) {
+  const d = fromKey(v.date);
+  const yy = d.getFullYear() !== new Date().getFullYear() ? ` '${String(d.getFullYear()).slice(2)}` : '';
+  return `<button class="visit" data-action="edit-visit" data-id="${esc(v.id)}">
+    <div class="v-date"><div class="v-day">${d.getDate()}</div><div class="v-mon">${MONTHS_SHORT[d.getMonth()]}${yy}</div></div>
+    <div class="v-main"><div class="v-title">${esc(v.treatment || 'Επίσκεψη')}</div><div class="v-sub">${DAYS[d.getDay()]}${v.time ? ' · ' + esc(v.time) : ''}</div>${v.notes ? `<div class="v-notes">${esc(v.notes)}</div>` : ''}</div>
+    ${statusPill(v)}
+  </button>`;
+}
+
+/* ================= Οθόνη: Ημερολόγιο ================= */
+function setCalDate(key) {
+  state.calSel = key;
+  const d = fromKey(key);
+  state.calY = d.getFullYear(); state.calM = d.getMonth();
+}
+
+function viewCalendar(r) {
+  if (r.date && isValidKey(r.date) && r.date !== state.calSel) setCalDate(r.date);
+  const y = state.calY, m = state.calM, sel = state.calSel, today = todayKey();
+  const byDate = new Map();
+  for (const v of state.visits) { if (!byDate.has(v.date)) byDate.set(v.date, []); byDate.get(v.date).push(v); }
+
+  const offset = (new Date(y, m, 1).getDay() + 6) % 7; // Δευτέρα πρώτη
+  const dim = new Date(y, m + 1, 0).getDate();
+  const cells = Math.ceil((offset + dim) / 7) * 7;
+  let grid = '';
+  for (let i = 0; i < cells; i++) {
+    const d = new Date(y, m, 1 - offset + i);
+    const k = toKey(d);
+    const vs = byDate.get(k) || [];
+    const cls = ['cal-day', d.getMonth() !== m ? 'out' : '', k === today ? 'today' : '', k === sel ? 'sel' : ''].filter(Boolean).join(' ');
+    const dots = vs.slice(0, 3).map(v => `<span class="dot ${v.status === 'done' ? 'done' : v.status === 'missed' ? 'missed' : ''}"></span>`).join('');
+    grid += `<button class="${cls}" data-action="cal-pick" data-date="${k}" aria-label="${fmtDayLong(k)}${vs.length ? `, ${vs.length} επισκέψεις` : ''}"><span>${d.getDate()}</span><span class="dots">${dots}</span></button>`;
+  }
+  const monthPrefix = `${y}-${pad(m + 1)}`;
+  const monthVisits = state.visits.filter(v => v.date.slice(0, 7) === monthPrefix);
+  const monthPatients = new Set(monthVisits.map(v => v.patientId)).size;
+  const dayVisits = (byDate.get(sel) || []).slice().sort(byDateAsc);
+  const upcoming = state.visits.filter(v => v.date > today && v.status === 'scheduled').sort(byDateAsc).slice(0, 5);
+
+  return `
+  <header class="large-header">
+    <div class="lh-row">
+      <div><div class="eyebrow">${ic(P.calendar, 15, 2.2)} Επισκέψεις</div><h1>Ημερολόγιο</h1></div>
+      <button class="round-btn" data-action="new-visit-cal" aria-label="Νέα επίσκεψη">${ICON.plusB}</button>
+    </div>
+  </header>
+  <div class="card cal" style="margin-top:16px">
+    <div class="cal-head">
+      <button class="icon-btn" data-action="cal-prev" aria-label="Προηγούμενος μήνας">${ICON.chevL}</button>
+      <div class="cal-title">${MONTHS[m]} ${y}</div>
+      <button class="icon-btn" data-action="cal-next" aria-label="Επόμενος μήνας">${ICON.chevR}</button>
+    </div>
+    <div class="cal-wd">${WEEK_HEAD.map(w => `<div>${w}</div>`).join('')}</div>
+    <div class="cal-grid" id="cal-grid">${grid}</div>
+    <div class="cal-foot">
+      <button class="chip" data-action="cal-today">Σήμερα</button>
+      <span>${monthVisits.length} επισκέψεις · ${monthPatients} ασθενείς</span>
+    </div>
+  </div>
+  <div class="cal-foot" style="margin-top:10px"><span></span><div class="legend"><span><i class="dot done"></i>Ήρθε</span><span><i class="dot"></i>Ραντεβού</span><span><i class="dot missed"></i>Δεν ήρθε</span></div></div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">${esc(fmtDayLong(sel))}</div><button class="group-action" data-action="new-visit-cal">${ic(P.plus, 16, 2.6)} Νέα</button></div>
+    <div class="card">${dayVisits.length ? dayVisits.map(calRow).join('') : '<div class="empty-inline">Καμία επίσκεψη αυτή την ημέρα</div>'}</div>
+  </div>
+  ${upcoming.length ? `<div class="group">
+    <div class="group-head"><div class="group-title">Επόμενα ραντεβού</div></div>
+    <div class="card">${upcoming.map(v => calRow(v, true)).join('')}</div>
+  </div>` : ''}`;
+}
+
+function calRow(v, withDate = false) {
+  const p = getPatient(v.patientId);
+  const name = p ? p.name : 'Άγνωστος ασθενής';
+  const st = STATUS[v.status] ? v.status : 'done';
+  const sub = [withDate ? fmtDM(v.date) : '', STATUS[st].short, v.treatment].filter(Boolean).join(' · ');
+  return `<div class="vrow">
+    <button class="vrow-main" ${p ? `data-action="open-patient" data-id="${esc(p.id)}"` : `data-action="edit-visit" data-id="${esc(v.id)}"`}>
+      <div class="time-pill st-${st}">${v.time ? esc(v.time) : '—'}</div>
+      ${p ? avatar(p, 'sm') : ''}
+      <div class="vr-text"><div class="vr-name">${esc(name)}</div><div class="vr-sub">${esc(sub)}</div></div>
+    </button>
+    <button class="vrow-edit" data-action="edit-visit" data-id="${esc(v.id)}" aria-label="Επεξεργασία επίσκεψης">${ICON.editSm}</button>
+  </div>`;
+}
+
+function shiftMonth(delta) {
+  let m = state.calM + delta, y = state.calY;
+  if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+  state.calM = m; state.calY = y;
+  render({ keep: true });
+}
+
+/* ================= Οθόνη: Ρυθμίσεις ================= */
+function viewSettings() {
+  const last = Number(store.get('lastBackup') || 0);
+  return `
+  <header class="large-header"><div class="lh-row"><div><div class="eyebrow">${ic(P.gear, 15, 2.2)} DentNotes</div><h1>Ρυθμίσεις</h1></div></div></header>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Αντίγραφο ασφαλείας</div></div>
+    <div class="card">
+      <button class="set-row" data-action="export"><span class="set-ic">${ICON.download}</span><span class="set-tx"><div class="set-t">Εξαγωγή αντιγράφου</div><div class="set-s">${last ? 'Τελευταίο: ' + fmtDate(toKey(new Date(last))) : 'Δεν έχει γίνει ποτέ'}</div></span>${ICON.chevRSm}</button>
+      <button class="set-row" data-action="import"><span class="set-ic">${ICON.upload}</span><span class="set-tx"><div class="set-t">Επαναφορά από αντίγραφο</div><div class="set-s">Εισαγωγή αρχείου .json</div></span>${ICON.chevRSm}</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:8px 6px 0">Τα δεδομένα αποθηκεύονται <b>μόνο σε αυτή τη συσκευή</b>. Κάνε τακτικά αντίγραφο (π.χ. στο iCloud Drive μέσω «Αποθήκευση στα Αρχεία»), ώστε να μη χαθούν αν αλλάξεις κινητό ή διαγράψεις την εφαρμογή.</p>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Αποθήκευση</div></div>
+    <div class="card">
+      <div class="set-row"><span class="set-ic">${ICON.db}</span><span class="set-tx"><div class="set-t">${state.patients.length} ασθενείς · ${state.visits.length} επισκέψεις</div><div class="set-s" id="storage-info">Υπολογισμός…</div></span></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-head"><div class="group-title">Εγκατάσταση στο iPhone</div></div>
+    <div class="card"><ol class="steps">
+      <li>Άνοιξε τη σελίδα στο <b>Safari</b>.</li>
+      <li>Πάτα <b>Κοινοποίηση</b> (τετράγωνο με βέλος).</li>
+      <li>Επίλεξε <b>«Προσθήκη στην οθόνη Αφετηρίας»</b>.</li>
+      <li>Άνοιγε πάντα την εφαρμογή από το εικονίδιο DentNotes.</li>
+    </ol></div>
+  </div>
+
+  <div class="group">
+    <div class="card">
+      <button class="set-row" data-action="wipe"><span class="set-ic red">${ICON.trash}</span><span class="set-tx"><div class="set-t" style="color:var(--red)">Διαγραφή όλων των δεδομένων</div><div class="set-s">Δεν αναιρείται</div></span></button>
+    </div>
+  </div>
+  <div class="created">DentNotes v1.0</div>`;
+}
+async function fillStorageInfo() {
+  const el = $('#storage-info');
+  if (!el) return;
+  let txt = 'Τοπική αποθήκευση στη συσκευή';
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const e = await navigator.storage.estimate();
+      if (e && typeof e.usage === 'number') txt = `Χρησιμοποιούνται ${fmtSize(e.usage)}`;
+    }
+    if (navigator.storage && navigator.storage.persisted) {
+      const p = await navigator.storage.persisted();
+      if (p) txt += ' · μόνιμη αποθήκευση ✓';
+    }
+  } catch (err) { /* ignore */ }
+  const el2 = $('#storage-info');
+  if (el2) el2.textContent = txt;
+}
+
+/* ================= Sheets (φόρμες) ================= */
+let sheetTimer = null;
+function openSheet(html, ctx, cls = '') {
+  clearTimeout(sheetTimer);
+  const root = $('#sheet-root');
+  root.innerHTML = `<div class="sheet-backdrop" data-action="sheet-cancel"></div><div class="sheet ${cls}" role="dialog" aria-modal="true">${html}</div>`;
+  root.hidden = false;
+  root.classList.remove('open');
+  void root.offsetWidth; // επιβολή reflow ώστε να παίξει το animation
+  root.classList.add('open');
+  document.body.classList.add('locked');
+  state.sheet = Object.assign({ dirty: false }, ctx);
+  $$('textarea', root).forEach(autoGrow);
+}
+function closeSheet(immediate = false) {
+  const root = $('#sheet-root');
+  const ctx = state.sheet;
+  if (ctx && ctx.onClose) { try { ctx.onClose(); } catch (e) { /* ignore */ } }
+  state.sheet = null;
+  document.body.classList.remove('locked');
+  if (root.hidden) return;
+  root.classList.remove('open');
+  clearTimeout(sheetTimer);
+  const finish = () => { root.hidden = true; root.innerHTML = ''; };
+  if (immediate) finish(); else sheetTimer = setTimeout(finish, 320);
+}
+async function cancelSheet() {
+  if (state.sheet && state.sheet.dirty) {
+    const r = await dialog({ title: 'Απόρριψη αλλαγών;', message: 'Οι αλλαγές που έκανες δεν θα αποθηκευτούν.', buttons: [{ label: 'Συνέχεια', value: false, style: 'bold' }, { label: 'Απόρριψη', value: true, style: 'danger' }] });
+    if (!r.value) return;
+  }
+  closeSheet();
+}
+function autoGrow(t) { t.style.height = 'auto'; t.style.height = Math.max(66, t.scrollHeight) + 'px'; }
+
+const fld = (name, label, value, o = {}) => `<div class="field" data-f="${name}">
+  <label for="f-${name}">${label}${o.required ? ' <span class="req">*</span>' : ''}</label>
+  <input id="f-${name}" name="${name}" type="${o.type || 'text'}" value="${esc(value == null ? '' : value)}" placeholder="${esc(o.placeholder || '')}"
+    ${o.inputmode ? `inputmode="${o.inputmode}"` : ''} ${o.autocap ? `autocapitalize="${o.autocap}"` : 'autocapitalize="off"'} ${o.maxlength ? `maxlength="${o.maxlength}"` : ''} autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+</div>`;
+const area = (name, label, value, ph = '') => `<div class="field stack" data-f="${name}">
+  ${label ? `<label for="f-${name}">${label}</label>` : ''}
+  <textarea id="f-${name}" name="${name}" rows="3" placeholder="${esc(ph)}" autocapitalize="sentences">${esc(value || '')}</textarea>
+</div>`;
+
+function fieldError(form, name, msg) {
+  $$('.field.err', form).forEach(f => f.classList.remove('err'));
+  $$('.err-msg', form).forEach(e => e.remove());
+  const f = $(`[data-f="${name}"]`, form);
+  if (!f) { toast(msg); return; }
+  f.classList.add('err');
+  const grp = f.closest('.fgroup');
+  grp.insertAdjacentHTML('afterend', `<div class="err-msg">${esc(msg)}</div>`);
+  grp.classList.remove('shake'); void grp.offsetWidth; grp.classList.add('shake');
+  f.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+/* ---------- Φόρμα ασθενή ---------- */
+function openPatientForm(p, focus) {
+  const isNew = !p;
+  p = p || {};
+  openSheet(`
+    <div class="sheet-head">
+      <button class="sh-btn l" data-action="sheet-cancel">Ακύρωση</button>
+      <div class="sh-title">${isNew ? 'Νέος ασθενής' : 'Επεξεργασία'}</div>
+      <button class="sh-btn r" data-action="save-patient">${isNew ? 'Προσθήκη' : 'Αποθήκευση'}</button>
+    </div>
+    <form class="sheet-body" id="pform" novalidate autocomplete="off">
+      <div class="flabel">Στοιχεία ασθενή</div>
+      <div class="fgroup">
+        ${fld('name', 'Ονοματεπώνυμο', p.name, { required: true, placeholder: 'π.χ. Μαρία Παπαδάκη', autocap: 'words', maxlength: 120 })}
+        ${fld('age', 'Ηλικία', p.age, { inputmode: 'numeric', placeholder: 'π.χ. 34', maxlength: 3 })}
+        ${fld('phone', 'Τηλέφωνο', p.phone, { type: 'tel', inputmode: 'tel', placeholder: 'π.χ. 69…', maxlength: 30 })}
+        ${fld('origin', 'Από πού είναι', p.origin, { placeholder: 'Πόλη / χώρα', autocap: 'words', maxlength: 80 })}
+      </div>
+      <div class="flabel">Αριθμοί</div>
+      <div class="fgroup">
+        ${fld('facultyNo', 'Faculty number', p.facultyNo, { placeholder: '—', maxlength: 40 })}
+        ${fld('ambulatoryNo', 'Ambulatory number', p.ambulatoryNo, { placeholder: '—', maxlength: 40 })}
+      </div>
+      <div class="flabel">Ιατρικό ιστορικό</div>
+      <div class="fgroup">
+        ${area('allergies', '⚠️ Σημαντικές αλλεργίες', p.allergies, 'π.χ. Πενικιλίνη, λάτεξ, ασπιρίνη…')}
+        ${area('medications', 'Φάρμακα που λαμβάνει', p.medications, 'π.χ. Αντιπηκτικά, ινσουλίνη…')}
+        ${area('history', 'Παθήσεις / ιστορικό', p.history, 'π.χ. Διαβήτης, υπέρταση, καρδιοπάθεια…')}
+      </div>
+      <div class="flabel">Σημειώσεις</div>
+      <div class="fgroup">${area('notes', '', p.notes, 'Ελεύθερες σημειώσεις για τον ασθενή…')}</div>
+      ${!isNew ? `<button type="button" class="btn danger" data-action="delete-patient" data-id="${esc(p.id)}">${ICON.trash} Διαγραφή ασθενή</button>` : ''}
+      <button type="submit" class="vh" tabindex="-1" aria-hidden="true">Αποθήκευση</button>
+    </form>`, { type: 'patient', id: p.id || null, isNew });
+  if (focus) {
+    const el = $(`#f-${focus}`);
+    if (el) setTimeout(() => el.closest('.field').scrollIntoView({ block: 'center' }), 350);
+  }
+}
+
+async function savePatient() {
+  const ctx = state.sheet;
+  if (!ctx || ctx.type !== 'patient' || state.saving) return;
+  const f = $('#pform');
+  const val = n => { const el = f.querySelector(`[name="${n}"]`); return el ? el.value.trim() : ''; };
+  const name = val('name').replace(/\s+/g, ' ');
+  if (!name) return fieldError(f, 'name', 'Το ονοματεπώνυμο είναι υποχρεωτικό.');
+  const ageRaw = val('age');
+  let age = '';
+  if (ageRaw !== '') {
+    if (!/^\d{1,3}$/.test(ageRaw) || Number(ageRaw) > 125) return fieldError(f, 'age', 'Η ηλικία πρέπει να είναι αριθμός από 0 έως 125.');
+    age = Number(ageRaw);
+  }
+  const existing = ctx.isNew ? null : getPatient(ctx.id);
+  if (!ctx.isNew && !existing) { closeSheet(); toast('Ο ασθενής δεν υπάρχει πλέον'); return; }
+  const now = Date.now();
+  const p = Object.assign({}, existing || {}, {
+    id: existing ? existing.id : uid(),
+    name, age,
+    phone: val('phone'), origin: val('origin'),
+    facultyNo: val('facultyNo'), ambulatoryNo: val('ambulatoryNo'),
+    allergies: val('allergies'), medications: val('medications'), history: val('history'), notes: val('notes'),
+    createdAt: existing ? existing.createdAt : now, updatedAt: now,
+  });
+  state.saving = true;
+  try { await DB.put('patients', p); }
+  catch (e) { console.error(e); toast('Σφάλμα αποθήκευσης: ' + (e.message || e)); return; }
+  finally { state.saving = false; }
+  if (existing) state.patients = state.patients.map(x => (x.id === p.id ? p : x));
+  else state.patients.push(p);
+  closeSheet();
+  requestPersist();
+  if (ctx.isNew) go('#/p/' + encodeURIComponent(p.id));
+  else render({ keep: true });
+  toast(ctx.isNew ? 'Η καρτέλα δημιουργήθηκε' : 'Οι αλλαγές αποθηκεύτηκαν');
+}
+
+async function deletePatient(id) {
+  const p = getPatient(id);
+  if (!p) return;
+  const vc = state.visits.filter(v => v.patientId === id).length;
+  let icnt = 0;
+  try { icnt = (await getImages(id)).length; } catch (e) { /* ignore */ }
+  const r = await dialog({
+    title: 'Διαγραφή ασθενή;',
+    message: `Θα διαγραφούν οριστικά η καρτέλα «${p.name}», ${vc} επισκέψεις και ${icnt} εικόνες.`,
+    buttons: [{ label: 'Άκυρο', value: false, style: 'bold' }, { label: 'Διαγραφή', value: true, style: 'danger' }],
+  });
+  if (!r.value) return;
+  try { await DB.deletePatient(id); }
+  catch (e) { console.error(e); toast('Σφάλμα διαγραφής'); return; }
+  state.patients = state.patients.filter(x => x.id !== id);
+  state.visits = state.visits.filter(v => v.patientId !== id);
+  (state.imgs.get(id) || []).forEach(im => revokeImage(im.id));
+  state.imgs.delete(id);
+  closeSheet(true);
+  if (parseRoute().name === 'patient') { history.replaceState(null, '', '#/'); render(); }
+  else render({ keep: true });
+  toast('Ο ασθενής διαγράφηκε');
+}
+
+/* ---------- Φόρμα επίσκεψης ---------- */
+function openVisitForm(v) {
+  v = v || {};
+  const isNew = !v.id;
+  if (!state.patients.length) { toast('Πρόσθεσε πρώτα έναν ασθενή'); openPatientForm(); return; }
+  const date = isValidKey(v.date) ? v.date : todayKey();
+  const status = STATUS[v.status] ? v.status : defaultStatus(date);
+  const pats = state.patients.slice().sort((a, b) => a.name.localeCompare(b.name, 'el', { sensitivity: 'base' }));
+  const hasPid = v.patientId && getPatient(v.patientId);
+  const onPatientPage = parseRoute().name === 'patient';
+  openSheet(`
+    <div class="sheet-head">
+      <button class="sh-btn l" data-action="sheet-cancel">Ακύρωση</button>
+      <div class="sh-title">${isNew ? 'Νέα επίσκεψη' : 'Επίσκεψη'}</div>
+      <button class="sh-btn r" data-action="save-visit">${isNew ? 'Προσθήκη' : 'Αποθήκευση'}</button>
+    </div>
+    <form class="sheet-body" id="vform" novalidate autocomplete="off">
+      <div class="fgroup">
+        <div class="field stack" data-f="patientId">
+          <label for="f-patientId">Ασθενής <span class="req">*</span></label>
+          <select id="f-patientId" name="patientId">
+            ${hasPid ? '' : '<option value="" selected disabled>Επίλεξε ασθενή…</option>'}
+            ${pats.map(p => `<option value="${esc(p.id)}" ${p.id === v.patientId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field" data-f="date"><label for="f-date">Ημερομηνία</label><input id="f-date" name="date" type="date" value="${date}"></div>
+        <div class="field" data-f="time"><label for="f-time">Ώρα</label><input id="f-time" name="time" type="time" value="${esc(v.time || '')}"></div>
+      </div>
+      <div class="flabel">Κατάσταση</div>
+      <div class="seg" id="seg">
+        ${['done', 'scheduled', 'missed'].map(s => `<button type="button" data-action="seg" data-val="${s}" class="${s === status ? 'on' : ''}"><i class="dot ${s === 'done' ? 'done' : s === 'missed' ? 'missed' : ''}"></i>${STATUS[s].short}</button>`).join('')}
+      </div>
+      <div class="flabel">Θεραπεία / λόγος επίσκεψης</div>
+      <div class="fgroup">
+        <div class="field" data-f="treatment" style="padding-right:16px"><input id="f-treatment" name="treatment" style="text-align:left" value="${esc(v.treatment || '')}" placeholder="π.χ. Σφράγισμα 36" maxlength="120" autocapitalize="sentences" enterkeyhint="done"></div>
+        <div class="chips">${TREATMENTS.map(t => `<button type="button" class="chip-s" data-action="chip" data-val="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      </div>
+      <div class="flabel">Σημειώσεις επίσκεψης</div>
+      <div class="fgroup">${area('vnotes', '', v.notes, 'Τι έγινε, τι χρειάζεται την επόμενη φορά…')}</div>
+      ${!isNew ? `
+        <button type="button" class="btn secondary" data-action="visit-to-cal" data-date="${esc(v.date)}">${ICON.calendar} Προβολή στο ημερολόγιο</button>
+        ${!onPatientPage && hasPid ? `<button type="button" class="btn secondary" data-action="visit-to-patient" data-id="${esc(v.patientId)}">${ICON.users} Καρτέλα ασθενή</button>` : ''}
+        <button type="button" class="btn danger" data-action="delete-visit" data-id="${esc(v.id)}">${ICON.trash} Διαγραφή επίσκεψης</button>` : ''}
+      <button type="submit" class="vh" tabindex="-1" aria-hidden="true">Αποθήκευση</button>
+    </form>`, { type: 'visit', id: v.id || null, isNew, status, statusTouched: !isNew });
+}
+
+function setSeg(val) {
+  if (!state.sheet || state.sheet.type !== 'visit' || !STATUS[val]) return;
+  state.sheet.status = val;
+  $$('#seg button').forEach(b => b.classList.toggle('on', b.dataset.val === val));
+}
+
+async function saveVisit() {
+  const ctx = state.sheet;
+  if (!ctx || ctx.type !== 'visit' || state.saving) return;
+  const f = $('#vform');
+  const pid = f.querySelector('[name="patientId"]').value;
+  if (!pid || !getPatient(pid)) return fieldError(f, 'patientId', 'Επίλεξε ασθενή.');
+  const date = f.querySelector('[name="date"]').value;
+  if (!isValidKey(date)) return fieldError(f, 'date', 'Επίλεξε έγκυρη ημερομηνία.');
+  let time = f.querySelector('[name="time"]').value || '';
+  if (time && !/^\d{2}:\d{2}/.test(time)) return fieldError(f, 'time', 'Μη έγκυρη ώρα.');
+  time = time.slice(0, 5);
+  const existing = ctx.isNew ? null : state.visits.find(x => x.id === ctx.id);
+  if (!ctx.isNew && !existing) { closeSheet(); toast('Η επίσκεψη δεν υπάρχει πλέον'); return; }
+  const now = Date.now();
+  const v = Object.assign({}, existing || {}, {
+    id: existing ? existing.id : uid(),
+    patientId: pid, date, time, status: ctx.status,
+    treatment: f.querySelector('[name="treatment"]').value.trim(),
+    notes: f.querySelector('[name="vnotes"]').value.trim(),
+    createdAt: existing ? existing.createdAt : now, updatedAt: now,
+  });
+  state.saving = true;
+  try { await DB.put('visits', v); }
+  catch (e) { console.error(e); toast('Σφάλμα αποθήκευσης: ' + (e.message || e)); return; }
+  finally { state.saving = false; }
+  if (existing) state.visits = state.visits.map(x => (x.id === v.id ? v : x));
+  else state.visits.push(v);
+  closeSheet();
+  requestPersist();
+  const r = parseRoute();
+  if (r.name === 'calendar') {
+    setCalDate(date);
+    history.replaceState(null, '', '#/calendar/' + date);
+  }
+  render({ keep: true });
+  toast(ctx.isNew ? 'Η επίσκεψη καταχωρήθηκε' : 'Η επίσκεψη ενημερώθηκε');
+}
+
+async function deleteVisit(id) {
+  const v = state.visits.find(x => x.id === id);
+  if (!v) return;
+  const r = await dialog({ title: 'Διαγραφή επίσκεψης;', message: `${fmtDate(v.date)}${v.treatment ? ' — ' + v.treatment : ''}`, buttons: [{ label: 'Άκυρο', value: false, style: 'bold' }, { label: 'Διαγραφή', value: true, style: 'danger' }] });
+  if (!r.value) return;
+  try { await DB.del('visits', id); }
+  catch (e) { console.error(e); toast('Σφάλμα διαγραφής'); return; }
+  state.visits = state.visits.filter(x => x.id !== id);
+  closeSheet();
+  render({ keep: true });
+  toast('Η επίσκεψη διαγράφηκε');
+}
+
+/* ================= Διάλογος ================= */
+let dlgTimer = null, dlgResolve = null;
+function dialog({ title, message = '', input = null, buttons }) {
+  closeDialog();
+  return new Promise(resolve => {
+    clearTimeout(dlgTimer);
+    const root = $('#dialog-root');
+    root.innerHTML = `<div class="dlg-backdrop"></div><div class="dlg" role="alertdialog" aria-modal="true">
+      <div class="dlg-body"><div class="dlg-t">${esc(title)}</div>${message ? `<div class="dlg-m">${esc(message)}</div>` : ''}
+      ${input ? `<input class="dlg-in" type="text" value="${esc(input.value || '')}" placeholder="${esc(input.placeholder || '')}" maxlength="${input.maxlength || 200}" enterkeyhint="done">` : ''}</div>
+      <div class="dlg-btns ${buttons.length > 2 ? 'vert' : ''}">${buttons.map((b, i) => `<button type="button" data-i="${i}" class="${b.style || ''}">${esc(b.label)}</button>`).join('')}</div></div>`;
+    root.hidden = false;
+    void root.offsetWidth;
+    root.classList.add('open');
+    const inp = $('.dlg-in', root);
+    if (inp) { inp.focus(); inp.select(); }
+    dlgResolve = i => {
+      dlgResolve = null;
+      const text = inp ? inp.value : null;
+      root.classList.remove('open');
+      dlgTimer = setTimeout(() => { root.hidden = true; root.innerHTML = ''; }, 200);
+      resolve({ value: i >= 0 && buttons[i] ? buttons[i].value : undefined, text });
+    };
+    $$('.dlg-btns button', root).forEach(b => b.addEventListener('click', ev => { ev.stopPropagation(); if (dlgResolve) dlgResolve(Number(b.dataset.i)); }));
+    if (inp) inp.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') { ev.preventDefault(); const i = buttons.findIndex(b => b.primary); if (dlgResolve) dlgResolve(i >= 0 ? i : buttons.length - 1); }
+    });
+  });
+}
+function closeDialog() {
+  if (dlgResolve) dlgResolve(-1);
+}
+
+/* ================= Toast / Busy ================= */
+let toastTimer = null;
+function toast(msg, ms = 2400) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+function busy(text) {
+  const b = $('#busy');
+  if (text === false) { b.hidden = true; return; }
+  $('#busy-text').textContent = text;
+  b.hidden = false;
+}
+
+/* ================= Προσθήκη εικόνων ================= */
+function pickImages(pid) {
+  if (!getPatient(pid)) return;
+  state.imgTarget = pid;
+  const inp = $('#img-input');
+  inp.value = '';
+  inp.click();
+}
+async function onImagesPicked(files) {
+  const pid = state.imgTarget;
+  state.imgTarget = null;
+  files = Array.from(files || []);
+  if (!pid || !files.length || !getPatient(pid)) return;
+  busy(files.length > 1 ? `Αποθήκευση ${files.length} εικόνων…` : 'Αποθήκευση εικόνας…');
+  let ok = 0, failed = 0;
+  try {
+    const list = await getImages(pid);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        let full, thumb;
+        try { full = await resizeImage(file, 2400, 0.9); }
+        catch (e) { full = new Blob([await file.arrayBuffer()], { type: file.type || 'image/jpeg' }); }
+        try { thumb = await resizeImage(full, 400, 0.8); } catch (e) { thumb = null; }
+        const rec = {
+          id: uid(), patientId: pid, caption: '', date: todayKey(), createdAt: Date.now() + i,
+          type: full.type || 'image/jpeg', data: await full.arrayBuffer(), thumb: thumb ? await thumb.arrayBuffer() : null,
+        };
+        await DB.put('images', rec);
+        list.push(recToMem(rec));
+        ok++;
+      } catch (e) { console.error(e); failed++; }
+    }
+  } catch (e) { console.error(e); failed = files.length; }
+  busy(false);
+  refreshImages(pid);
+  requestPersist();
+  if (ok && !failed) toast(ok === 1 ? 'Η εικόνα προστέθηκε' : `Προστέθηκαν ${ok} εικόνες`);
+  else if (ok) toast(`Προστέθηκαν ${ok}, απέτυχαν ${failed}`);
+  else toast('Η εικόνα δεν μπόρεσε να αποθηκευτεί');
+}
+
+/* ================= Προβολή εικόνας (zoom) ================= */
+const V = { pid: null, list: [], idx: 0, s: 1, tx: 0, ty: 0, pointers: new Map(), g: null, multi: false, lastTap: 0, lastTapX: 0, lastTapY: 0 };
+function openViewer(pid, idx) {
+  V.pid = pid;
+  V.list = sortedImages(pid);
+  if (!V.list.length) return;
+  V.idx = clamp(idx, 0, V.list.length - 1);
+  $('#viewer').hidden = false;
+  document.body.classList.add('locked');
+  showViewerImage();
+}
+function closeViewer() {
+  const v = $('#viewer');
+  if (v.hidden) return;
+  v.hidden = true;
+  $('#v-img').removeAttribute('src');
+  V.pointers.clear(); V.g = null;
+  if (!state.sheet) document.body.classList.remove('locked');
+}
+function showViewerImage() {
+  const im = V.list[V.idx];
+  if (!im) { closeViewer(); return; }
+  const img = $('#v-img');
+  img.classList.remove('anim');
+  V.s = 1; V.tx = 0; V.ty = 0;
+  applyT();
+  img.src = imgUrl(im, 'full');
+  $('#v-cap').textContent = im.caption || 'Ακτινογραφία';
+  $('#v-date').textContent = im.date ? fmtDate(im.date) : '';
+  $('#v-count').textContent = V.list.length > 1 ? `${V.idx + 1}/${V.list.length}` : '';
+}
+function applyT() { $('#v-img').style.transform = `translate3d(${V.tx}px,${V.ty}px,0) scale(${V.s})`; }
+function clampT() {
+  const img = $('#v-img');
+  const W = img.clientWidth, H = img.clientHeight, nw = img.naturalWidth, nh = img.naturalHeight;
+  if (!W || !H || !nw || !nh) { V.tx = 0; V.ty = 0; return; }
+  const fit = Math.min(W / nw, H / nh);
+  const maxX = Math.max(0, (nw * fit * V.s - W) / 2);
+  const maxY = Math.max(0, (nh * fit * V.s - H) / 2);
+  V.tx = clamp(V.tx, -maxX, maxX);
+  V.ty = clamp(V.ty, -maxY, maxY);
+}
+function stagePoint(x, y) {
+  const r = $('#v-stage').getBoundingClientRect();
+  return { x: x - r.left - r.width / 2, y: y - r.top - r.height / 2 };
+}
+function startGesture() {
+  const pts = Array.from(V.pointers.values());
+  const g = { s0: V.s, tx0: V.tx, ty0: V.ty, n: pts.length, t: Date.now(), moved: false };
+  if (pts.length >= 2) {
+    g.c0 = stagePoint((pts[0].x + pts[1].x) / 2, (pts[0].y + pts[1].y) / 2);
+    g.d0 = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    V.multi = true;
+  } else if (pts.length === 1) {
+    g.x0 = pts[0].x; g.y0 = pts[0].y;
+  }
+  V.g = g;
+}
+function moveGesture() {
+  const g = V.g; if (!g) return;
+  const pts = Array.from(V.pointers.values());
+  if (pts.length >= 2 && g.n >= 2) {
+    const c = stagePoint((pts[0].x + pts[1].x) / 2, (pts[0].y + pts[1].y) / 2);
+    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const s = clamp(g.s0 * d / g.d0, 1, 6);
+    V.tx = c.x - (g.c0.x - g.tx0) * (s / g.s0);
+    V.ty = c.y - (g.c0.y - g.ty0) * (s / g.s0);
+    V.s = s;
+    clampT(); applyT();
+    g.moved = true;
+  } else if (pts.length === 1 && g.n === 1) {
+    const dx = pts[0].x - g.x0, dy = pts[0].y - g.y0;
+    if (Math.abs(dx) + Math.abs(dy) > 8) g.moved = true;
+    if (V.s > 1.01) { V.tx = g.tx0 + dx; V.ty = g.ty0 + dy; clampT(); }
+    else if (!V.multi) { V.tx = dx; V.ty = Math.abs(dy) > Math.abs(dx) && dy > 0 ? dy : 0; }
+    applyT();
+  }
+}
+function endGesture(e) {
+  const g = V.g;
+  if (!g || V.pointers.size > 0) return;
+  const img = $('#v-img');
+  if (g.n === 1 && !V.multi) {
+    const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (g.s0 <= 1.01 && V.s <= 1.01) {
+      if (dx < -60 && Math.abs(dx) > Math.abs(dy) && V.idx < V.list.length - 1) { V.idx++; showViewerImage(); return; }
+      if (dx > 60 && Math.abs(dx) > Math.abs(dy) && V.idx > 0) { V.idx--; showViewerImage(); return; }
+      if (dy > 110 && Math.abs(dy) > Math.abs(dx)) { closeViewer(); return; }
+      img.classList.add('anim'); V.tx = 0; V.ty = 0; applyT();
+    }
+    if (!g.moved && Date.now() - g.t < 300) {
+      const now = Date.now();
+      if (now - V.lastTap < 320 && Math.hypot(e.clientX - V.lastTapX, e.clientY - V.lastTapY) < 30) {
+        img.classList.add('anim');
+        if (V.s > 1.01) { V.s = 1; V.tx = 0; V.ty = 0; }
+        else { const p = stagePoint(e.clientX, e.clientY); V.s = 2.5; V.tx = -1.5 * p.x; V.ty = -1.5 * p.y; clampT(); }
+        applyT();
+        V.lastTap = 0;
+      } else { V.lastTap = now; V.lastTapX = e.clientX; V.lastTapY = e.clientY; }
+    }
+  } else if (V.s < 1.02) {
+    img.classList.add('anim'); V.s = 1; V.tx = 0; V.ty = 0; applyT();
+  }
+  V.multi = false;
+  V.g = null;
+}
+function setupViewerGestures() {
+  const stage = $('#v-stage');
+  const img = $('#v-img');
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    img.classList.remove('anim');
+    try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    V.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    startGesture();
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!V.pointers.has(e.pointerId)) return;
+    V.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moveGesture();
+  });
+  const up = e => {
+    if (!V.pointers.has(e.pointerId)) return;
+    V.pointers.delete(e.pointerId);
+    if (V.pointers.size > 0) startGesture();
+    else endGesture(e);
+  };
+  stage.addEventListener('pointerup', up);
+  stage.addEventListener('pointercancel', up);
+  stage.addEventListener('wheel', e => { // για υπολογιστή
+    e.preventDefault();
+    img.classList.remove('anim');
+    V.s = clamp(V.s * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 1, 6);
+    if (V.s <= 1.01) { V.s = 1; V.tx = 0; V.ty = 0; }
+    clampT(); applyT();
+  }, { passive: false });
+  // Αποτροπή του zoom ολόκληρης σελίδας στο iOS
+  ['gesturestart', 'gesturechange'].forEach(t => stage.addEventListener(t, e => e.preventDefault()));
+}
+
+async function editCaption() {
+  const im = V.list[V.idx]; if (!im) return;
+  const r = await dialog({ title: 'Λεζάντα εικόνας', message: 'π.χ. Πανοραμική, Οπισθοφατνιακή 36', input: { value: im.caption, placeholder: 'Λεζάντα', maxlength: 80 }, buttons: [{ label: 'Άκυρο', value: false }, { label: 'Αποθήκευση', value: true, style: 'bold', primary: true }] });
+  if (!r.value) return;
+  const caption = (r.text || '').trim();
+  try {
+    const rec = await DB.get('images', im.id);
+    if (!rec) throw new Error('Δεν βρέθηκε');
+    rec.caption = caption;
+    await DB.put('images', rec);
+  } catch (e) { console.error(e); toast('Σφάλμα αποθήκευσης'); return; }
+  im.caption = caption;
+  $('#v-cap').textContent = caption || 'Ακτινογραφία';
+  refreshImages(im.patientId);
+  toast('Η λεζάντα αποθηκεύτηκε');
+}
+async function deleteImage() {
+  const im = V.list[V.idx]; if (!im) return;
+  const r = await dialog({ title: 'Διαγραφή εικόνας;', message: 'Η εικόνα θα διαγραφεί οριστικά.', buttons: [{ label: 'Άκυρο', value: false, style: 'bold' }, { label: 'Διαγραφή', value: true, style: 'danger' }] });
+  if (!r.value) return;
+  try { await DB.del('images', im.id); } catch (e) { console.error(e); toast('Σφάλμα διαγραφής'); return; }
+  const list = state.imgs.get(im.patientId) || [];
+  const i = list.findIndex(x => x.id === im.id);
+  if (i >= 0) list.splice(i, 1);
+  revokeImage(im.id);
+  V.list = sortedImages(im.patientId);
+  refreshImages(im.patientId);
+  toast('Η εικόνα διαγράφηκε');
+  if (!V.list.length) { closeViewer(); return; }
+  V.idx = Math.min(V.idx, V.list.length - 1);
+  showViewerImage();
+}
+function shareImage() {
+  const im = V.list[V.idx]; if (!im) return;
+  const p = getPatient(im.patientId);
+  const base = (p ? p.name : 'xray').replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '') || 'xray';
+  const ext = /png/.test(im.blob.type) ? 'png' : 'jpg';
+  const name = `${base}_${im.date || todayKey()}.${ext}`;
+  let file = null;
+  try { file = new File([im.blob], name, { type: im.blob.type || 'image/jpeg' }); } catch (e) { file = null; }
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file] }).catch(err => { if (err && err.name !== 'AbortError') downloadBlob(im.blob, name); });
+  } else downloadBlob(im.blob, name);
+}
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+/* ================= Backup ================= */
+function bufToB64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64ToBuf(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function exportBackup() {
+  if (!state.patients.length && !state.visits.length) { toast('Δεν υπάρχουν δεδομένα για εξαγωγή'); return; }
+  busy('Δημιουργία αντιγράφου…');
+  let file, blob, name, counts;
+  try {
+    const recs = await DB.all('images');
+    const images = recs.map(r => ({ id: r.id, patientId: r.patientId, caption: r.caption || '', date: r.date, createdAt: r.createdAt, type: r.type || 'image/jpeg', data: bufToB64(r.data) }));
+    const payload = { app: 'dentnotes', version: 1, exportedAt: new Date().toISOString(), patients: state.patients, visits: state.visits, images };
+    blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    const d = new Date();
+    name = `DentNotes-backup-${todayKey()}_${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    try { file = new File([blob], name, { type: 'application/json' }); } catch (e) { file = null; }
+    counts = { p: state.patients.length, v: state.visits.length, i: images.length };
+  } catch (e) {
+    console.error(e); busy(false); toast('Σφάλμα δημιουργίας αντιγράφου'); return;
+  }
+  busy(false);
+  const url = URL.createObjectURL(blob);
+  const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  openSheet(`
+    <div class="sheet-head"><span></span><div class="sh-title">Αντίγραφο ασφαλείας</div><button class="sh-btn r" data-action="sheet-close">Τέλος</button></div>
+    <div class="sheet-body">
+      <div class="empty" style="padding:20px 10px 24px"><div class="big">${ic(P.shield, 40, 1.8)}</div>
+        <h3>Το αντίγραφο είναι έτοιμο</h3>
+        <p>${counts.p} ασθενείς · ${counts.v} επισκέψεις · ${counts.i} εικόνες<br>${fmtSize(blob.size)}</p></div>
+      ${canShare ? `<button class="btn" data-action="share-backup">${ICON.share} Αποθήκευση στα Αρχεία / Κοινοποίηση</button>` : ''}
+      <a class="btn ${canShare ? 'secondary' : ''}" href="${url}" download="${esc(name)}" data-action="download-backup">${ICON.download} Λήψη αρχείου</a>
+      <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:16px">Συμβουλή: επίλεξε «Αποθήκευση στα Αρχεία» → iCloud Drive, ώστε να υπάρχει και εκτός κινητού.</p>
+    </div>`, { type: 'export', file, onClose: () => setTimeout(() => URL.revokeObjectURL(url), 60000) }, 'short');
+}
+function markBackupDone() { store.set('lastBackup', String(Date.now())); store.del('backupSnooze'); }
+
+async function importBackup(file) {
+  if (!file) return;
+  busy('Ανάγνωση αρχείου…');
+  let data;
+  try { data = JSON.parse(await file.text()); }
+  catch (e) { busy(false); toast('Το αρχείο δεν είναι έγκυρο αντίγραφο'); return; }
+  busy(false);
+  if (!data || data.app !== 'dentnotes' || !Array.isArray(data.patients)) { toast('Το αρχείο δεν είναι αντίγραφο DentNotes'); return; }
+  const pats = data.patients.filter(p => p && typeof p.id === 'string' && p.id && typeof p.name === 'string');
+  const visits = (Array.isArray(data.visits) ? data.visits : []).filter(v => v && typeof v.id === 'string' && v.id && typeof v.patientId === 'string' && isValidKey(v.date));
+  const images = (Array.isArray(data.images) ? data.images : []).filter(i => i && typeof i.id === 'string' && i.id && typeof i.patientId === 'string' && typeof i.data === 'string');
+  const r = await dialog({
+    title: 'Επαναφορά αντιγράφου;',
+    message: `Βρέθηκαν ${pats.length} ασθενείς, ${visits.length} επισκέψεις και ${images.length} εικόνες${data.exportedAt ? ` (από ${fmtDate(toKey(new Date(data.exportedAt)))})` : ''}.\n\nΘα προστεθούν στα υπάρχοντα δεδομένα· όσα υπάρχουν ήδη θα ενημερωθούν.`,
+    buttons: [{ label: 'Άκυρο', value: false }, { label: 'Επαναφορά', value: true, style: 'bold' }],
+  });
+  if (!r.value) return;
+  busy('Επαναφορά…');
+  const S = x => (x == null ? '' : String(x));
+  try {
+    const cleanP = pats.map(p => ({
+      id: p.id, name: S(p.name).trim() || 'Χωρίς όνομα',
+      age: p.age === '' || p.age == null || isNaN(Number(p.age)) ? '' : Number(p.age),
+      phone: S(p.phone), origin: S(p.origin), facultyNo: S(p.facultyNo), ambulatoryNo: S(p.ambulatoryNo),
+      allergies: S(p.allergies), medications: S(p.medications), history: S(p.history), notes: S(p.notes),
+      createdAt: Number(p.createdAt) || Date.now(), updatedAt: Number(p.updatedAt) || Date.now(),
+    }));
+    const pidSet = new Set([...state.patients.map(p => p.id), ...cleanP.map(p => p.id)]);
+    const cleanV = visits.filter(v => pidSet.has(v.patientId)).map(v => ({
+      id: v.id, patientId: v.patientId, date: v.date, time: /^\d{2}:\d{2}$/.test(S(v.time)) ? v.time : '',
+      status: STATUS[v.status] ? v.status : defaultStatus(v.date), treatment: S(v.treatment), notes: S(v.notes),
+      createdAt: Number(v.createdAt) || Date.now(), updatedAt: Number(v.updatedAt) || Date.now(),
+    }));
+    await DB.putMany('patients', cleanP);
+    await DB.putMany('visits', cleanV);
+    let n = 0;
+    for (const im of images) {
+      if (!pidSet.has(im.patientId)) continue;
+      n++;
+      busy(`Επαναφορά εικόνων ${n}/${images.length}…`);
+      try {
+        const buf = b64ToBuf(im.data);
+        const type = S(im.type) || 'image/jpeg';
+        let thumb = null;
+        try { thumb = await (await resizeImage(new Blob([buf], { type }), 400, 0.8)).arrayBuffer(); } catch (e) { thumb = null; }
+        await DB.put('images', { id: im.id, patientId: im.patientId, caption: S(im.caption), date: isValidKey(im.date) ? im.date : todayKey(), createdAt: Number(im.createdAt) || Date.now(), type, data: buf, thumb });
+      } catch (e) { console.error('image import', e); }
+    }
+    state.patients = await DB.all('patients');
+    state.visits = await DB.all('visits');
+    for (const list of state.imgs.values()) list.forEach(im => revokeImage(im.id));
+    state.imgs.clear();
+    busy(false);
+    requestPersist();
+    render({ keep: true });
+    toast('Η επαναφορά ολοκληρώθηκε');
+  } catch (e) {
+    console.error(e); busy(false); toast('Σφάλμα επαναφοράς: ' + (e.message || e));
+  }
+}
+
+async function wipeAll() {
+  const r1 = await dialog({ title: 'Διαγραφή όλων;', message: 'Θα διαγραφούν ΟΛΟΙ οι ασθενείς, οι επισκέψεις και οι εικόνες από αυτή τη συσκευή.', buttons: [{ label: 'Άκυρο', value: false, style: 'bold' }, { label: 'Συνέχεια', value: true, style: 'danger' }] });
+  if (!r1.value) return;
+  const r2 = await dialog({ title: 'Είσαι σίγουρη/ος;', message: 'Η ενέργεια δεν αναιρείται. Έχεις κρατήσει αντίγραφο ασφαλείας;', buttons: [{ label: 'Άκυρο', value: false, style: 'bold' }, { label: 'Οριστική διαγραφή', value: true, style: 'danger' }] });
+  if (!r2.value) return;
+  try { await DB.clearAll(); } catch (e) { console.error(e); toast('Σφάλμα διαγραφής'); return; }
+  for (const list of state.imgs.values()) list.forEach(im => revokeImage(im.id));
+  state.imgs.clear(); state.patients = []; state.visits = []; state.search = '';
+  history.replaceState(null, '', '#/settings');
+  render();
+  toast('Όλα τα δεδομένα διαγράφηκαν');
+}
+
+/* ================= Χειρισμός ενεργειών ================= */
+const actions = {
+  'new-patient': () => openPatientForm(),
+  'open-patient': el => go('#/p/' + encodeURIComponent(el.dataset.id)),
+  'edit-patient': el => { const p = getPatient(el.dataset.id); if (p) openPatientForm(p, el.dataset.focus); },
+  'back': () => { if (state.prevRoute) history.back(); else go('#/'); },
+  'save-patient': () => savePatient(),
+  'delete-patient': el => deletePatient(el.dataset.id),
+  'new-visit': el => openVisitForm({ patientId: el.dataset.id, date: todayKey() }),
+  'new-visit-cal': () => openVisitForm({ date: state.calSel }),
+  'edit-visit': el => { const v = state.visits.find(x => x.id === el.dataset.id); if (v) openVisitForm(v); },
+  'save-visit': () => saveVisit(),
+  'delete-visit': el => deleteVisit(el.dataset.id),
+  'visit-to-cal': el => { closeSheet(true); setCalDate(el.dataset.date); go('#/calendar/' + el.dataset.date); },
+  'visit-to-patient': el => { closeSheet(true); go('#/p/' + encodeURIComponent(el.dataset.id)); },
+  'seg': el => { if (state.sheet) { state.sheet.statusTouched = true; state.sheet.dirty = true; } setSeg(el.dataset.val); },
+  'chip': el => {
+    const inp = $('#f-treatment'); if (!inp) return;
+    const cur = inp.value.trim(), t = el.dataset.val;
+    if (!cur) inp.value = t;
+    else if (!norm(cur).split(/,\s*/).includes(norm(t))) inp.value = cur + ', ' + t;
+    if (state.sheet) state.sheet.dirty = true;
+  },
+  'sheet-cancel': () => cancelSheet(),
+  'sheet-close': () => closeSheet(),
+  'add-image': el => pickImages(el.dataset.id),
+  'view-image': el => openViewer(el.dataset.pid, Number(el.dataset.idx)),
+  'v-close': () => closeViewer(),
+  'v-caption': () => editCaption(),
+  'v-delete': () => deleteImage(),
+  'v-share': () => shareImage(),
+  'cal-prev': () => shiftMonth(-1),
+  'cal-next': () => shiftMonth(1),
+  'cal-today': () => { const k = todayKey(); setCalDate(k); history.replaceState(null, '', '#/calendar/' + k); render({ keep: true }); },
+  'cal-pick': el => { setCalDate(el.dataset.date); history.replaceState(null, '', '#/calendar/' + el.dataset.date); render({ keep: true }); },
+  'goto-cal': el => { setCalDate(el.dataset.date); go('#/calendar/' + el.dataset.date); },
+  'export': () => exportBackup(),
+  'share-backup': () => {
+    const f = state.sheet && state.sheet.file; if (!f) return;
+    navigator.share({ files: [f] }).then(() => { markBackupDone(); toast('Το αντίγραφο αποθηκεύτηκε'); })
+      .catch(err => { if (err && err.name !== 'AbortError') toast('Χρησιμοποίησε το «Λήψη αρχείου»'); });
+  },
+  'download-backup': () => { markBackupDone(); return 'native'; },
+  'import': () => { const i = $('#import-input'); i.value = ''; i.click(); },
+  'wipe': () => wipeAll(),
+  'dismiss': el => { store.set(el.dataset.key, '1'); render({ keep: true }); },
+  'snooze-backup': () => { store.set('backupSnooze', String(Date.now() + 3 * 864e5)); render({ keep: true }); },
+};
+
+function onClick(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const fn = actions[el.dataset.action];
+  if (!fn) return;
+  const res = fn(el, e);
+  if (res !== 'native') e.preventDefault();
+}
+
+/* ================= Εκκίνηση ================= */
+async function init() {
+  hydrateIcons();
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  const d = new Date();
+  state.calY = d.getFullYear(); state.calM = d.getMonth();
+  try {
+    await DB.open();
+    state.patients = await DB.all('patients');
+    state.visits = await DB.all('visits');
+  } catch (e) {
+    console.error(e);
+    $('#view').innerHTML = `<div class="empty"><div class="big">${ICON.alert}</div><h3>Δεν ήταν δυνατή η πρόσβαση στα δεδομένα</h3><p>${esc(e.message || e)}</p><button class="btn inline" onclick="location.reload()">Επανάληψη</button></div>`;
+    return;
+  }
+
+  window.addEventListener('hashchange', onHashChange);
+  document.addEventListener('click', onClick);
+
+  document.addEventListener('input', e => {
+    if (e.target.id === 'search') {
+      state.search = e.target.value;
+      const l = $('#plist'); if (l) l.innerHTML = patientListHTML();
+      return;
+    }
+    if (e.target.closest('#sheet-root')) {
+      if (state.sheet) state.sheet.dirty = true;
+      if (e.target.tagName === 'TEXTAREA') autoGrow(e.target);
+      const fl = e.target.closest('.field.err');
+      if (fl) { fl.classList.remove('err'); const m = fl.closest('.fgroup').nextElementSibling; if (m && m.classList.contains('err-msg')) m.remove(); }
+    }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.id === 'f-date' && state.sheet && state.sheet.type === 'visit') {
+      state.sheet.dirty = true;
+      if (!state.sheet.statusTouched && isValidKey(e.target.value)) setSeg(defaultStatus(e.target.value));
+    }
+    if (e.target.closest && e.target.closest('#sheet-root') && state.sheet) state.sheet.dirty = true;
+    if (e.target.id === 'img-input') onImagesPicked(e.target.files);
+    if (e.target.id === 'import-input') { const f = e.target.files && e.target.files[0]; importBackup(f); }
+  });
+  document.addEventListener('submit', e => {
+    e.preventDefault();
+    if (e.target.id === 'pform') savePatient();
+    if (e.target.id === 'vform') saveVisit();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!$('#dialog-root').hidden) closeDialog();
+    else if (!$('#viewer').hidden) closeViewer();
+    else if (state.sheet) cancelSheet();
+  });
+
+  // Swipe στο ημερολόγιο για αλλαγή μήνα
+  let ct = null;
+  document.addEventListener('touchstart', e => {
+    const g = e.target.closest && e.target.closest('#cal-grid');
+    ct = g && e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!ct) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - ct.x, dy = t.clientY - ct.y, dt = Date.now() - ct.t;
+    ct = null;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 45 && dt < 700) shiftMonth(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // Tab bar: πάτημα στην ίδια καρτέλα → επάνω
+  $$('.tabbar a').forEach(a => a.addEventListener('click', e => {
+    const target = a.getAttribute('href');
+    const cur = parseRoute();
+    if (a.dataset.tab === cur.name) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else if (target === '#/calendar' && cur.name !== 'calendar') { e.preventDefault(); go('#/calendar/' + state.calSel); }
+  }));
+
+  // Αλλαγή ημέρας όταν η εφαρμογή ξανανοίγει
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.lastToday !== todayKey()) {
+      state.lastToday = todayKey();
+      if (!state.sheet) render({ keep: true });
+    }
+  });
+
+  setupViewerGestures();
+  render();
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW', err));
+  }
+}
+init();
+</script>
+</body>
+</html>
