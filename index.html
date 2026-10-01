@@ -345,6 +345,7 @@ h1{font-size:34px;line-height:1.1;margin:4px 0 0;font-weight:800;letter-spacing:
 
 <script>
 'use strict';
+const APP_VERSION = '1.1';
 
 /* ================= Βοηθητικά ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -951,7 +952,7 @@ function viewSettings() {
       <button class="set-row" data-action="wipe"><span class="set-ic red">${ICON.trash}</span><span class="set-tx"><div class="set-t" style="color:var(--red)">Διαγραφή όλων των δεδομένων</div><div class="set-s">Δεν αναιρείται</div></span></button>
     </div>
   </div>
-  <div class="created">DentNotes v1.0</div>`;
+  <div class="created">DentNotes v${APP_VERSION}</div>`;
 }
 async function fillStorageInfo() {
   const el = $('#storage-info');
@@ -1780,9 +1781,32 @@ async function init() {
   setupViewerGestures();
   render();
 
-  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW', err));
-  }
+  setupUpdates();
+}
+
+/* ================= Αυτόματες ενημερώσεις ================= */
+function setupUpdates() {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  const safeToReload = () => !state.sheet && $('#dialog-root').hidden && $('#viewer').hidden && $('#busy').hidden;
+  const reloadWhenSafe = () => {
+    if (reloading) return;
+    if (safeToReload()) { reloading = true; location.reload(); }
+    else setTimeout(reloadWhenSafe, 1500);
+  };
+  // Όταν εγκατασταθεί νέα έκδοση, ξαναφορτώνουμε (όχι όσο είναι ανοιχτή φόρμα, για να μη χαθεί τίποτα).
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) reloadWhenSafe(); });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    let lastCheck = Date.now();
+    // Το iOS συχνά «συνεχίζει» την εφαρμογή χωρίς να την ξαναφορτώσει: ελέγχουμε για ενημέρωση κάθε φορά που ανοίγει.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastCheck > 30000) {
+        lastCheck = Date.now();
+        reg.update().catch(() => {});
+      }
+    });
+  }).catch(err => console.warn('SW', err));
 }
 init();
 </script>
