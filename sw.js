@@ -1,5 +1,5 @@
 // Service worker: κάνει την εφαρμογή να ανοίγει και χωρίς ίντερνετ.
-const CACHE = 'dentnotes-v1';
+const CACHE = 'dentnotes-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable.png'];
 
 self.addEventListener('install', e => {

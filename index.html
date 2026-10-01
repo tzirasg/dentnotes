@@ -728,7 +728,7 @@ function patientCard(p, info) {
   const sub = [p.age !== '' && p.age != null ? `${p.age} ετών` : '', p.origin].filter(Boolean).join(' · ') || p.phone || 'Χωρίς στοιχεία';
   const tags = [];
   if (p.allergies && p.allergies.trim()) tags.push(`<span class="tag alert">${ICON.alertSm} Αλλεργία</span>`);
-  if (p.facultyNo) tags.push(`<span class="tag">Fac. ${esc(p.facultyNo)}</span>`);
+  if (p.facultyNo) tags.push(`<span class="tag">X-Ray ${esc(p.facultyNo)}</span>`);
   if (p.ambulatoryNo) tags.push(`<span class="tag">Amb. ${esc(p.ambulatoryNo)}</span>`);
   let side = '';
   if (info && info.next) side = `<div><div class="side-l">Ραντεβού</div><div class="side-v pink">${fmtDM(info.next)}</div></div>`;
@@ -749,7 +749,7 @@ function viewPatient(p) {
   const fromCal = state.prevRoute && state.prevRoute.name === 'calendar';
   const visits = state.visits.filter(v => v.patientId === p.id).sort(byDateDesc);
   const phone = String(p.phone || '').replace(/[^\d+]/g, '');
-  const meta = [p.age !== '' && p.age != null ? `${p.age} ετών` : '', p.origin ? `από ${p.origin}` : ''].filter(Boolean).join(' · ');
+  const meta = [p.age !== '' && p.age != null ? `${p.age} ετών` : '', p.origin ? p.origin : ''].filter(Boolean).join(' · ');
   const hasHistory = p.allergies || p.medications || p.history;
   const imgs = state.imgs.get(p.id);
   return `
@@ -774,10 +774,10 @@ function viewPatient(p) {
     <div class="group-head"><div class="group-title">Στοιχεία</div></div>
     <div class="card">
       ${row('Τηλέφωνο', p.phone)}
-      ${row('Faculty number', p.facultyNo)}
+      ${row('X-Ray number', p.facultyNo)}
       ${row('Ambulatory number', p.ambulatoryNo)}
       ${row('Ηλικία', p.age !== '' && p.age != null ? `${p.age}` : '')}
-      ${row('Από πού είναι', p.origin)}
+      ${row('Πόλη', p.origin)}
     </div>
   </div>
 
@@ -1044,11 +1044,11 @@ function openPatientForm(p, focus) {
         ${fld('name', 'Ονοματεπώνυμο', p.name, { required: true, placeholder: 'π.χ. Μαρία Παπαδάκη', autocap: 'words', maxlength: 120 })}
         ${fld('age', 'Ηλικία', p.age, { inputmode: 'numeric', placeholder: 'π.χ. 34', maxlength: 3 })}
         ${fld('phone', 'Τηλέφωνο', p.phone, { type: 'tel', inputmode: 'tel', placeholder: 'π.χ. 69…', maxlength: 30 })}
-        ${fld('origin', 'Από πού είναι', p.origin, { placeholder: 'Πόλη / χώρα', autocap: 'words', maxlength: 80 })}
+        ${fld('origin', 'Πόλη', p.origin, { placeholder: 'π.χ. Αθήνα', autocap: 'words', maxlength: 80 })}
       </div>
       <div class="flabel">Αριθμοί</div>
       <div class="fgroup">
-        ${fld('facultyNo', 'Faculty number', p.facultyNo, { placeholder: '—', maxlength: 40 })}
+        ${fld('facultyNo', 'X-Ray number', p.facultyNo, { placeholder: '—', maxlength: 40 })}
         ${fld('ambulatoryNo', 'Ambulatory number', p.ambulatoryNo, { placeholder: '—', maxlength: 40 })}
       </div>
       <div class="flabel">Ιατρικό ιστορικό</div>
